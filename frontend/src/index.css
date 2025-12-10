@@ -1,1 +1,138 @@
 @import "tailwindcss";
+
+:root {
+  --app-bg: #f8fafc; /* light */
+  --app-text: #111827;
+
+  --body-font-size: 14px;
+  --h1-font-size: 20px;
+  --h2-font-size: 18px;
+  --h3-font-size: 16px;
+  --small-font-size: 14px;
+}
+
+body.dark {
+  --app-bg: #0f1724; /* dark background */
+  --app-text: #e6eef8; /* light text */
+}
+
+body {
+  background-color: var(--app-bg);
+  color: var(--app-text);
+  font-size: var(--body-font-size);
+}
+
+body[data-font-size="1"] {
+  --body-font-size: 20px;
+  --h1-font-size: 24px;
+  --h2-font-size: 22px;
+  --h3-font-size: 20px;
+  --small-font-size: 16px;
+}
+body[data-font-size="2"] {
+  --body-font-size: 24px;
+  --h1-font-size: 28px;
+  --h2-font-size: 26px;
+  --h3-font-size: 24px;
+  --small-font-size: 18px;
+}
+
+.language-toggle {
+  font-size: 16px !important;
+}
+
+h1 { font-size: var(--h1-font-size); }
+h2 { font-size: var(--h2-font-size); }
+h3 { font-size: var(--h3-font-size); }
+.text-sm { font-size: var(--small-font-size); }
+
+input[type="text"],
+input[type="number"],
+select,
+button {
+  font-size: var(--body-font-size);
+}
+
+.period-select {
+  font-size: var(--body-font-size);
+  padding: 0.5em 2em 0.5em 0.75em;
+  min-width: 120px;
+  width: auto;
+  height: auto;
+  appearance: menulist;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+}
+
+.note {
+  font-size: var(--body-font-size);
+}
+
+body.dark .bg-white,
+body.dark .bg-gray-50,
+body.dark .bg-gray-100,
+body.dark .bg-gray-200 {
+  background-color: var(--app-bg) !important;
+  color: var(--app-text) !important;
+}
+
+body.dark .text-gray-700,
+body.dark .text-gray-800,
+body.dark .text-gray-900 {
+  color: var(--app-text) !important;
+}
+
+body.dark .border-gray-300,
+body.dark .bg-white\/90 {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.dark .period-title {
+  color: #ffffff !important;
+}
+
+body.dark .period-select,
+body.dark .amount-select,
+body.dark .note,
+body.dark .period-select option {
+  color: #ffffff !important;
+}
+
+
+/* Highcharts SVG text override */
+body.dark .highcharts-root text,
+body.dark .highcharts-container svg text {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+body.dark .app-footer,
+body.dark .app-footer .footer-text {
+  color: #ffffff !important;
+}
+body.dark .app-footer a {
+  color: #9ecfff !important;
+}
+
+body.dark .period-select {
+  background-color: var(--app-bg) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.dark .period-select option {
+  background-color: var(--app-bg) !important;
+  color: #ffffff !important;
+}
+
+body.dark .period-select {
+  -webkit-appearance: menulist-button;
+  -moz-appearance: menulist-button;
+  appearance: menulist-button;
+}
+
+body.dark .period-select::-ms-expand {
+  display: none;
+}
+
+
