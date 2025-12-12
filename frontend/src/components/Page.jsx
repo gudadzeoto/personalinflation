@@ -68,6 +68,30 @@ const Page = ({ language }) => {
     }, 0);
   };
 
+  // Function to clear all input fields in the table
+  const handleClear = () => {
+    // Clear parent category inputs
+    const parentMonthly = document.getElementById('parent-monthly');
+    const parentYearly = document.getElementById('parent-yearly');
+    if (parentMonthly) parentMonthly.value = '';
+    if (parentYearly) parentYearly.value = '';
+
+    // Clear food subcategory inputs
+    const foodMonthlyInputs = document.querySelectorAll('.food-monthly');
+    const foodYearlyInputs = document.querySelectorAll('.food-yearly');
+    foodMonthlyInputs.forEach(input => input.value = '');
+    foodYearlyInputs.forEach(input => input.value = '');
+
+    // Clear beverages subcategory inputs
+    const beveragesMonthlyInputs = document.querySelectorAll('.beverages-monthly');
+    const beveragesYearlyInputs = document.querySelectorAll('.beverages-yearly');
+    beveragesMonthlyInputs.forEach(input => input.value = '');
+    beveragesYearlyInputs.forEach(input => input.value = '');
+
+    // Update totals to zero
+    updateTotal();
+  };
+
   return (
     <div
       className="bg-white shadow-md bpg_mrgvlovani_caps w-full"
@@ -478,7 +502,7 @@ const Page = ({ language }) => {
                 </td>
                 <td className="border border-gray-300 px-2 py-2"></td>
                 <td className="border border-gray-300 px-2 py-2 text-right" id="total-avg">
-                  2154.13 ₾
+
                 </td>
                 <td className="border border-gray-300 px-2 py-2">
                   <div className="flex gap-2">
@@ -704,7 +728,10 @@ const Page = ({ language }) => {
           <span className="text-sm font-medium">PDF</span>
         </a>
 
-        <button className="bg-white border border-[#01389c] text-[#01389c] px-6 py-2 rounded hover:bg-gray-50 transition text-sm font-medium flex items-center gap-2">
+        <button
+          onClick={handleClear}
+          className="bg-white border border-[#01389c] text-[#01389c] px-6 py-2 rounded hover:bg-gray-50 transition text-sm font-medium flex items-center gap-2 cursor-pointer"
+        >
           <span className="text-lg">»</span>
           {language === "GE" ? "გასუფთავება" : "Clear"}
         </button>
