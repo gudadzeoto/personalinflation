@@ -4,8 +4,29 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../styles/datepicker-custom.css";
 import Kalata from "../assets/images/Kalata.jpg";
 import Basket from "../assets/images/Basket.jpg";
+import PdfIcon from "../assets/images/pdf.png";
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
+
+const InfoTooltip = ({ text, align = 'center' }) => {
+  const alignClass = align === 'left'
+    ? 'left-0'
+    : align === 'right'
+      ? 'right-0'
+      : 'left-1/2 -translate-x-1/2';
+
+  return (
+    <span className="relative inline-flex group" tabIndex={0} aria-label={text}>
+      <span className="text-xs cursor-help leading-none select-none">ℹ️</span>
+      <span
+        className={`invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 transition-opacity duration-150 absolute ${alignClass} top-5 max-w-[260px] md:max-w-[320px] bg-white text-[#01389c] border border-[#01389c] text-[9px] px-2 py-1 rounded shadow-md z-50 text-left whitespace-normal break-words`}
+        role="tooltip"
+      >
+        {text}
+      </span>
+    </span>
+  );
+};
 
 const Page = ({ language }) => {
   const [startDate, setStartDate] = useState(new Date(2024, 10)); // November 2024
@@ -16,6 +37,8 @@ const Page = ({ language }) => {
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalMonthlySum, setTotalMonthlySum] = useState(0);
+  const [totalYearlySum, setTotalYearlySum] = useState(0);
 
   // Fetch categories from API
   useEffect(() => {
@@ -77,35 +100,21 @@ const Page = ({ language }) => {
 
   // Function to update total values
   const updateTotal = () => {
-    setTimeout(() => {
-      const parentMonthly = parseFloat(document.getElementById('parent-monthly')?.value) || 0;
-      const parentYearly = parseFloat(document.getElementById('parent-yearly')?.value) || 0;
-      const foodMonthly = parseFloat(document.querySelector('.food-monthly')?.value) || 0;
-      const foodYearly = parseFloat(document.querySelector('.food-yearly')?.value) || 0;
-      const beveragesMonthly = parseFloat(document.querySelector('.beverages-monthly')?.value) || 0;
-      const beveragesYearly = parseFloat(document.querySelector('.beverages-yearly')?.value) || 0;
+    const numberInputs = document.querySelectorAll('input[type="number"]');
 
-      const totalMonthly = parentMonthly + foodMonthly + beveragesMonthly;
-      const totalYearly = parentYearly + foodYearly + beveragesYearly;
+    let monthly = 0;
+    let yearly = 0;
 
-      const totalMonthlyInput = document.getElementById('total-monthly');
-      const totalYearlyInput = document.getElementById('total-yearly');
-      const totalAvgCell = document.getElementById('total-avg');
-      const parentAvgCell = document.getElementById('parent-avg');
+    numberInputs.forEach((input) => {
+      const val = parseFloat(input.value) || 0;
+      const key = (input.id || input.className || '').toLowerCase();
 
-      if (totalMonthlyInput) totalMonthlyInput.value = totalMonthly.toFixed(2);
-      if (totalYearlyInput) totalYearlyInput.value = totalYearly.toFixed(2);
+      if (key.includes('monthly')) monthly += val;
+      if (key.includes('yearly')) yearly += val;
+    });
 
-      // Calculate parent average from subcategories
-      const foodAvg = 991.00;
-      const beveragesAvg = 86.06;
-      const parentAvg = foodAvg + beveragesAvg;
-      if (parentAvgCell) parentAvgCell.textContent = parentAvg.toFixed(2) + ' ₾';
-
-      // Calculate total average expense
-      const totalAvg = parentAvg;
-      if (totalAvgCell) totalAvgCell.textContent = totalAvg.toFixed(2) + ' ₾';
-    }, 0);
+    setTotalMonthlySum(monthly);
+    setTotalYearlySum(yearly);
   };
 
   // Function to clear all input fields in the table
@@ -323,24 +332,52 @@ const Page = ({ language }) => {
       {/* Table and Chart Section */}
       <div className="w-full flex flex-col lg:flex-row gap-6 mt-6 px-4">
         {/* Left Side: Expense Categories Table */}
-        <div className="w-full lg:w-2/3 overflow-x-auto">
+        <div className="w-full lg:w-2/3 overflow-x-auto overflow-y-visible">
           <table className="w-full border-collapse text-[10px]">
             <thead className="bg-[#01389c] text-white">
               <tr>
                 <th className="border border-gray-300 px-1 py-1 text-left text-[10px] font-bold text-white">
-                  {language === "GE" ? "ჯგუფის დასახელება" : "Group Name"}
+                  <div className="flex items-center gap-1">
+                    <span>{language === "GE" ? "ჯგუფის დასახელება" : "Group Name"}</span>
+                    <InfoTooltip
+                      align="left"
+                      text={language === "GE"
+                        ? "დანიშნულების მიხედვით ინდივიდუალური მოხმარების კლასიფიკატორის (COICOP) ჯგუფის დასახელება"
+                        : "Group name according to the Classification of Individual Consumption According to Purpose"}
+                    />
+                  </div>
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
-                  {language === "GE" ? "ფასების პროცენტული ცვლილება" : "Percentage Change of Prices"}
+                  <div className="flex items-center gap-1 justify-center">
+                    <span>{language === "GE" ? "ფასების პროცენტული ცვლილება" : "Percentage Change of Prices"}</span>
+                    <InfoTooltip
+                      text={language === "GE"
+                        ? "ფასების პროცენტული ცვლილება არჩეულ პერიოდებს შორის"
+                        : "Percentage change of the index"}
+                    />
+                  </div>
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
-                  {language === "GE"
-                    ? "შინამეურნეობისსაშუალო ხარჯი თვეში"
-                    : "Average Monthly Expenditure of Household "}
+                  <div className="flex items-center gap-1 justify-center">
+                    <span>{language === "GE"
+                      ? "შინამეურნეობისსაშუალო ხარჯი თვეში"
+                      : "Average Monthly Expenditure of Household "}</span>
+                    <InfoTooltip
+                      text={language === "GE"
+                        ? "საშუალო სიდიდის შინამეურნეობის (3,3 კაცი) ხარჯი თვეში"
+                        : "Monthly expenditure of an average household (3.3 persons)"}
+                    />
+                  </div>
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
-                  <div>
-                    {language === "GE" ? "პერსონალური ხარჯი (ლარი) " : "Personal Expenditure (GEL)"}
+                  <div className="flex items-center gap-1 justify-center">
+                    <span>{language === "GE" ? "პერსონალური ხარჯი (ლარი) " : "Personal Expenditure (GEL)"}</span>
+                    <InfoTooltip
+                      align="right"
+                      text={language === "GE"
+                        ? "მომხმარებლის მიერ თვეში ან წელიწადში გაწეული ხარჯი"
+                        : "Annual or monthly expenditure amount"}
+                    />
                   </div>
                   <div className="flex justify-around mt-0.5 text-[9px] font-normal text-white">
                     <span>{language === "GE" ? "ყოველთვიური" : "Monthly"}</span>
@@ -429,9 +466,13 @@ const Page = ({ language }) => {
                         </td>
                       </tr>
 
-                      {/* Subcategories */}
-                      {expandedCategory === category.code && category.subcategories && category.subcategories.map((sub) => (
-                        <tr key={sub.code} className="hover:bg-gray-50 bg-gray-50">
+                      {/* Subcategories (kept in DOM, hidden when collapsed) */}
+                      {category.subcategories && category.subcategories.map((sub) => (
+                        <tr
+                          key={sub.code}
+                          className="hover:bg-gray-50 bg-gray-50"
+                          style={{ display: expandedCategory === category.code ? '' : 'none' }}
+                        >
                           <td
                             className="border border-gray-300 px-2 py-2 pl-8"
                             style={{ color: "#333" }}
@@ -498,17 +539,17 @@ const Page = ({ language }) => {
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          value="0"
+                          value={totalMonthlySum.toFixed(2)}
                           readOnly
-                          className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right bg-white total-monthly"
+                          className="border border-gray-400 rounded px-2 py-1 w-27 text-right bg-white total-monthly"
                           style={{ color: "#333" }}
                           id="total-monthly"
                         />
                         <input
                           type="text"
-                          value="0"
+                          value={totalYearlySum.toFixed(2)}
                           readOnly
-                          className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right bg-white total-yearly"
+                          className="border border-gray-400 rounded px-2 py-1 w-27 text-right bg-white total-yearly"
                           style={{ color: "#333" }}
                           id="total-yearly"
                         />
@@ -519,6 +560,21 @@ const Page = ({ language }) => {
               )}
             </tbody>
           </table>
+          <div className="w-full flex items-center justify-between px-1 py-1 mt-1 mb-1">
+            <a
+              href="#"
+              className="flex items-center gap-2 text-[#01389c] hover:opacity-80 transition"
+            >
+              <img src={PdfIcon} alt="PDF" className="w-8 h-8" />
+            </a>
+            <button
+              onClick={handleClear}
+              className="bg-white border border-[#01389c] text-[#01389c] px-6 py-2 rounded hover:bg-gray-50 transition text-sm font-medium flex items-center gap-2 cursor-pointer"
+            >
+              <span className="text-lg">»</span>
+              {language === "GE" ? "გასუფთავება" : "Clear"}
+            </button>
+          </div>
         </div>
 
         {/* Right Side: Charts */}
@@ -695,25 +751,6 @@ const Page = ({ language }) => {
             />
           </div>
         </div>
-      </div>
-
-      {/* Footer Actions */}
-      <div className="w-full flex justify-start items-center gap-4 px-4 py-4 mb-4">
-        <a
-          href="#"
-          className="flex items-center gap-2 text-[#01389c] hover:opacity-80 transition"
-        >
-          <span className="text-2xl">📄</span>
-          <span className="text-sm font-medium">PDF</span>
-        </a>
-
-        <button
-          onClick={handleClear}
-          className="bg-white border border-[#01389c] text-[#01389c] px-6 py-2 rounded hover:bg-gray-50 transition text-sm font-medium flex items-center gap-2 cursor-pointer"
-        >
-          <span className="text-lg">»</span>
-          {language === "GE" ? "გასუფთავება" : "Clear"}
-        </button>
       </div>
     </div>
   );
