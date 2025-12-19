@@ -14,6 +14,46 @@ const Page = ({ language }) => {
   const endDateRef = useRef(null);
   const [dateError, setDateError] = useState("");
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/personaltitle');
+        const data = await response.json();
+
+        // Group categories by level
+        const level1 = data.filter(item => item.level === 1);
+        const level2 = data.filter(item => item.level === 2);
+
+        // Create hierarchical structure - only direct children
+        const categoriesWithSub = level1.map(parent => {
+          const parentCodeStr = String(parent.code);
+          const parentCodeLength = parentCodeStr.length;
+
+          return {
+            ...parent,
+            subcategories: level2.filter(sub => {
+              const subCodeStr = String(sub.code);
+              // Only match direct children (code starts with parent code and is exactly one level deeper)
+              return subCodeStr.startsWith(parentCodeStr) &&
+                     subCodeStr.length === parentCodeLength + 1;
+            })
+          };
+        });
+
+        setCategories(categoriesWithSub);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Format date to display as YYYY/MM
   const formatDate = (date) => {
@@ -70,23 +110,9 @@ const Page = ({ language }) => {
 
   // Function to clear all input fields in the table
   const handleClear = () => {
-    // Clear parent category inputs
-    const parentMonthly = document.getElementById('parent-monthly');
-    const parentYearly = document.getElementById('parent-yearly');
-    if (parentMonthly) parentMonthly.value = '';
-    if (parentYearly) parentYearly.value = '';
-
-    // Clear food subcategory inputs
-    const foodMonthlyInputs = document.querySelectorAll('.food-monthly');
-    const foodYearlyInputs = document.querySelectorAll('.food-yearly');
-    foodMonthlyInputs.forEach(input => input.value = '');
-    foodYearlyInputs.forEach(input => input.value = '');
-
-    // Clear beverages subcategory inputs
-    const beveragesMonthlyInputs = document.querySelectorAll('.beverages-monthly');
-    const beveragesYearlyInputs = document.querySelectorAll('.beverages-yearly');
-    beveragesMonthlyInputs.forEach(input => input.value = '');
-    beveragesYearlyInputs.forEach(input => input.value = '');
+    // Clear all parent and sub category inputs dynamically
+    const allInputs = document.querySelectorAll('input[type="number"]');
+    allInputs.forEach(input => input.value = '');
 
     // Update totals to zero
     updateTotal();
@@ -302,229 +328,195 @@ const Page = ({ language }) => {
             <thead className="bg-[#01389c] text-white">
               <tr>
                 <th className="border border-gray-300 px-1 py-1 text-left text-[10px] font-bold text-white">
-                  {language === "GE" ? "ჯგუფის დასახელება" : "Group"}
+                  {language === "GE" ? "ჯგუფის დასახელება" : "Group Name"}
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
-                  {language === "GE" ? "ფასების პროცენტული ცვლილება" : "Ch. %"}
+                  {language === "GE" ? "ფასების პროცენტული ცვლილება" : "Percentage Change of Prices"}
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
                   {language === "GE"
                     ? "შინამეურნეობისსაშუალო ხარჯი თვეში"
-                    : "Avg"}
+                    : "Average Monthly Expenditure of Household "}
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div>
-                    {language === "GE" ? "პერსონალური ხარჯი (ლარი) " : "Pers."}
+                    {language === "GE" ? "პერსონალური ხარჯი (ლარი) " : "Personal Expenditure (GEL)"}
                   </div>
                   <div className="flex justify-around mt-0.5 text-[9px] font-normal text-white">
-                    <span>{language === "GE" ? "ყოველთვიური" : "Mo"}</span>
-                    <span>{language === "GE" ? "ყოველწლიური" : "Yr"}</span>
+                    <span>{language === "GE" ? "ყოველთვიური" : "Monthly"}</span>
+                    <span>{language === "GE" ? "ყოველწლიური" : "Annual"}</span>
                   </div>
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white text-[10px]">
-              {/* Food and Non-Alcoholic Beverages */}
-              <tr
-                className="hover:bg-gray-50 cursor-pointer bg-white"
-                onClick={() => setExpandedCategory(expandedCategory === 'food' ? null : 'food')}
-              >
-                <td
-                  className="border border-gray-300 px-2 py-2"
-                  style={{ color: "#333" }}
-                >
-                  <span className="font-medium flex items-center gap-2">
-                    <span className="transform transition-transform" style={{ display: 'inline-block', transform: expandedCategory === 'food' ? 'rotate(90deg)' : 'rotate(0deg)' }}>
-                      ▶
-                    </span>
-                    {language === "GE"
-                      ? "სურსათი და უალკოჰოლო სასმელები"
-                      : "Food and Non-Alcoholic Beverages"}
-                  </span>
-                </td>
-                <td
-                  className="border border-gray-300 px-2 py-2 text-right"
-                  style={{ color: "#333" }}
-                >
-                  10.3%
-                </td>
-                <td
-                  className="border border-gray-300 px-2 py-2 text-right"
-                  style={{ color: "#333" }}
-                  id="parent-avg"
-                >
-                  1077.07 ₾
-                </td>
-                <td className="border border-gray-300 px-2 py-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min="0"
-                      className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right parent-monthly"
-                      style={{ color: "#333" }}
-                      onClick={(e) => e.stopPropagation()}
-                      id="parent-monthly"
-                      onChange={(e) => {
-                        const monthly = parseFloat(e.target.value) || 0;
-                        const yearlyInput = e.target.nextSibling;
-                        if (yearlyInput) yearlyInput.value = (monthly * 12).toFixed(2);
-                        updateTotal();
-                      }}
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right parent-yearly"
-                      style={{ color: "#333" }}
-                      onClick={(e) => e.stopPropagation()}
-                      id="parent-yearly"
-                      onChange={(e) => {
-                        const yearly = parseFloat(e.target.value) || 0;
-                        const monthlyInput = e.target.previousSibling;
-                        if (monthlyInput) monthlyInput.value = (yearly / 12).toFixed(2);
-                        updateTotal();
-                      }}
-                    />
-                  </div>
-                </td>
-              </tr>
-
-              {/* Subcategories - Food */}
-              {expandedCategory === 'food' && (
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="border border-gray-300 px-2 py-4 text-center">
+                    {language === "GE" ? "იტვირთება..." : "Loading..."}
+                  </td>
+                </tr>
+              ) : (
                 <>
-                  <tr className="hover:bg-gray-50 bg-gray-50">
-                    <td
-                      className="border border-gray-300 px-2 py-2 pl-8"
-                      style={{ color: "#333" }}
-                    >
-                      <span className="text-[9px]">
-                        {language === "GE" ? "სურსათი" : "Food"}
-                      </span>
-                    </td>
-                    <td
-                      className="border border-gray-300 px-2 py-2 text-right"
-                      style={{ color: "#333" }}
-                    >
-                      10.3%
-                    </td>
-                    <td
-                      className="border border-gray-300 px-2 py-2 text-right"
-                      style={{ color: "#333" }}
-                    >
-                      991.00 ₾
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2">
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          min="0"
-                          className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] food-monthly"
+                  {categories.map((category) => (
+                    <React.Fragment key={category.code}>
+                      {/* Parent Category Row */}
+                      <tr
+                        className="hover:bg-gray-50 cursor-pointer bg-white"
+                        onClick={() => setExpandedCategory(expandedCategory === category.code ? null : category.code)}
+                      >
+                        <td
+                          className="border border-gray-300 px-2 py-2"
                           style={{ color: "#333" }}
-                          onChange={(e) => {
-                            const monthly = parseFloat(e.target.value) || 0;
-                            const yearlyInput = e.target.nextSibling;
-                            if (yearlyInput) yearlyInput.value = (monthly * 12).toFixed(2);
-                            updateTotal();
-                          }}
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] food-yearly"
+                        >
+                          <span className="font-medium flex items-center gap-2">
+                            <span
+                              className="transform transition-transform"
+                              style={{
+                                display: 'inline-block',
+                                transform: expandedCategory === category.code ? 'rotate(90deg)' : 'rotate(0deg)'
+                              }}
+                            >
+                              ▶
+                            </span>
+                            {language === "GE" ? category.name_geo : category.name_en}
+                          </span>
+                        </td>
+                        <td
+                          className="border border-gray-300 px-2 py-2 text-right"
                           style={{ color: "#333" }}
-                          onChange={(e) => {
-                            const yearly = parseFloat(e.target.value) || 0;
-                            const monthlyInput = e.target.previousSibling;
-                            if (monthlyInput) monthlyInput.value = (yearly / 12).toFixed(2);
-                            updateTotal();
-                          }}
-                        />
-                      </div>
-                    </td>
-                  </tr>
+                        >
+                          10.3%
+                        </td>
+                        <td
+                          className="border border-gray-300 px-2 py-2 text-right"
+                          style={{ color: "#333" }}
+                          id={`parent-avg-${category.code}`}
+                        >
+                          1077.07 ₾
+                        </td>
+                        <td className="border border-gray-300 px-2 py-2">
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right parent-monthly-${category.code}`}
+                              style={{ color: "#333" }}
+                              onClick={(e) => e.stopPropagation()}
+                              id={`parent-monthly-${category.code}`}
+                              onChange={(e) => {
+                                const monthly = parseFloat(e.target.value) || 0;
+                                const yearlyInput = e.target.nextSibling;
+                                if (yearlyInput) yearlyInput.value = (monthly * 12).toFixed(2);
+                                updateTotal();
+                              }}
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right parent-yearly-${category.code}`}
+                              style={{ color: "#333" }}
+                              onClick={(e) => e.stopPropagation()}
+                              id={`parent-yearly-${category.code}`}
+                              onChange={(e) => {
+                                const yearly = parseFloat(e.target.value) || 0;
+                                const monthlyInput = e.target.previousSibling;
+                                if (monthlyInput) monthlyInput.value = (yearly / 12).toFixed(2);
+                                updateTotal();
+                              }}
+                            />
+                          </div>
+                        </td>
+                      </tr>
 
-                  <tr className="hover:bg-gray-50 bg-gray-50">
-                    <td
-                      className="border border-gray-300 px-2 py-2 pl-8"
-                      style={{ color: "#333" }}
-                    >
-                      <span className="text-[9px]">
-                        {language === "GE" ? "უალკოჰოლო სასმელები" : "Non-Alcoholic Beverages"}
-                      </span>
+                      {/* Subcategories */}
+                      {expandedCategory === category.code && category.subcategories && category.subcategories.map((sub) => (
+                        <tr key={sub.code} className="hover:bg-gray-50 bg-gray-50">
+                          <td
+                            className="border border-gray-300 px-2 py-2 pl-8"
+                            style={{ color: "#333" }}
+                          >
+                            <span className="text-[9px]">
+                              {language === "GE" ? sub.name_geo : sub.name_en}
+                            </span>
+                          </td>
+                          <td
+                            className="border border-gray-300 px-2 py-2 text-right"
+                            style={{ color: "#333" }}
+                          >
+                            10.3%
+                          </td>
+                          <td
+                            className="border border-gray-300 px-2 py-2 text-right"
+                            style={{ color: "#333" }}
+                          >
+                            991.00 ₾
+                          </td>
+                          <td className="border border-gray-300 px-2 py-2">
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                min="0"
+                                className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-monthly-${sub.code}`}
+                                style={{ color: "#333" }}
+                                onChange={(e) => {
+                                  const monthly = parseFloat(e.target.value) || 0;
+                                  const yearlyInput = e.target.nextSibling;
+                                  if (yearlyInput) yearlyInput.value = (monthly * 12).toFixed(2);
+                                  updateTotal();
+                                }}
+                              />
+                              <input
+                                type="number"
+                                min="0"
+                                className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-yearly-${sub.code}`}
+                                style={{ color: "#333" }}
+                                onChange={(e) => {
+                                  const yearly = parseFloat(e.target.value) || 0;
+                                  const monthlyInput = e.target.previousSibling;
+                                  if (monthlyInput) monthlyInput.value = (yearly / 12).toFixed(2);
+                                  updateTotal();
+                                }}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  ))}
+
+                  {/* Total Row */}
+                  <tr className="bg-[#01389c] text-white font-bold">
+                    <td className="border border-gray-300 px-2 py-2">
+                      {language === "GE" ? "სულ" : "Total"}
                     </td>
-                    <td
-                      className="border border-gray-300 px-2 py-2 text-right"
-                      style={{ color: "#333" }}
-                    >
-                      9.7%
-                    </td>
-                    <td
-                      className="border border-gray-300 px-2 py-2 text-right"
-                      style={{ color: "#333" }}
-                    >
-                      86.06 ₾
+                    <td className="border border-gray-300 px-2 py-2"></td>
+                    <td className="border border-gray-300 px-2 py-2 text-right" id="total-avg">
+
                     </td>
                     <td className="border border-gray-300 px-2 py-2">
                       <div className="flex gap-2">
                         <input
-                          type="number"
-                          min="0"
-                          className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] beverages-monthly"
+                          type="text"
+                          value="0"
+                          readOnly
+                          className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right bg-white total-monthly"
                           style={{ color: "#333" }}
-                          onChange={(e) => {
-                            const monthly = parseFloat(e.target.value) || 0;
-                            const yearlyInput = e.target.nextSibling;
-                            if (yearlyInput) yearlyInput.value = (monthly * 12).toFixed(2);
-                            updateTotal();
-                          }}
+                          id="total-monthly"
                         />
                         <input
-                          type="number"
-                          min="0"
-                          className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] beverages-yearly"
+                          type="text"
+                          value="0"
+                          readOnly
+                          className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right bg-white total-yearly"
                           style={{ color: "#333" }}
-                          onChange={(e) => {
-                            const yearly = parseFloat(e.target.value) || 0;
-                            const monthlyInput = e.target.previousSibling;
-                            if (monthlyInput) monthlyInput.value = (yearly / 12).toFixed(2);
-                            updateTotal();
-                          }}
+                          id="total-yearly"
                         />
                       </div>
                     </td>
                   </tr>
                 </>
               )}
-              {/* Total Row */}
-              <tr className="bg-[#01389c] text-white font-bold">
-                <td className="border border-gray-300 px-2 py-2">
-                  {language === "GE" ? "სულ" : "Total"}
-                </td>
-                <td className="border border-gray-300 px-2 py-2"></td>
-                <td className="border border-gray-300 px-2 py-2 text-right" id="total-avg">
-
-                </td>
-                <td className="border border-gray-300 px-2 py-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value="0"
-                      readOnly
-                      className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right bg-white total-monthly"
-                      style={{ color: "#333" }}
-                      id="total-monthly"
-                    />
-                    <input
-                      type="text"
-                      value="0"
-                      readOnly
-                      className="border border-gray-400 rounded px-2 py-1 w-1/2 text-right bg-white total-yearly"
-                      style={{ color: "#333" }}
-                      id="total-yearly"
-                    />
-                  </div>
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -552,20 +544,7 @@ const Page = ({ language }) => {
                   margin: 15
                 },
                 xAxis: {
-                  categories: [
-                    language === "GE" ? 'სურსათი' : 'Food',
-                    language === "GE" ? 'სასმელები' : 'Beverages',
-                    language === "GE" ? 'ტანსაცმელი' : 'Clothing',
-                    language === "GE" ? 'საცხოვრებელი' : 'Housing',
-                    language === "GE" ? 'ავეჯი' : 'Furniture',
-                    language === "GE" ? 'ჯანდაცვა' : 'Health',
-                    language === "GE" ? 'ტრანსპორტი' : 'Transport',
-                    language === "GE" ? 'კავშირგაბმულობა' : 'Communication',
-                    language === "GE" ? 'დასვენება' : 'Recreation',
-                    language === "GE" ? 'განათლება' : 'Education',
-                    language === "GE" ? 'რესტორანი' : 'Restaurant',
-                    language === "GE" ? 'სხვა' : 'Other'
-                  ],
+                  categories: categories.map(cat => language === "GE" ? cat.name_geo : cat.name_en),
                   labels: {
                     style: {
                       fontFamily: 'bpg_mrgvlovani_caps',
