@@ -5,15 +5,16 @@ import "../styles/datepicker-custom.css";
 import Kalata from "../assets/images/Kalata.jpg";
 import Basket from "../assets/images/Basket.jpg";
 import PdfIcon from "../assets/images/pdf.png";
-import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
+import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 
-const InfoTooltip = ({ text, align = 'center' }) => {
-  const alignClass = align === 'left'
-    ? 'left-0'
-    : align === 'right'
-      ? 'right-0'
-      : 'left-1/2 -translate-x-1/2';
+const InfoTooltip = ({ text, align = "center" }) => {
+  const alignClass =
+    align === "left"
+      ? "left-0"
+      : align === "right"
+      ? "right-0"
+      : "left-1/2 -translate-x-1/2";
 
   return (
     <span className="relative inline-flex group" tabIndex={0} aria-label={text}>
@@ -44,33 +45,35 @@ const Page = ({ language }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/personaltitle');
+        const response = await fetch("http://localhost:5000/api/personaltitle");
         const data = await response.json();
 
         // Group categories by level
-        const level1 = data.filter(item => item.level === 1);
-        const level2 = data.filter(item => item.level === 2);
+        const level1 = data.filter((item) => item.level === 1);
+        const level2 = data.filter((item) => item.level === 2);
 
         // Create hierarchical structure - only direct children
-        const categoriesWithSub = level1.map(parent => {
+        const categoriesWithSub = level1.map((parent) => {
           const parentCodeStr = String(parent.code);
           const parentCodeLength = parentCodeStr.length;
 
           return {
             ...parent,
-            subcategories: level2.filter(sub => {
+            subcategories: level2.filter((sub) => {
               const subCodeStr = String(sub.code);
               // Only match direct children (code starts with parent code and is exactly one level deeper)
-              return subCodeStr.startsWith(parentCodeStr) &&
-                     subCodeStr.length === parentCodeLength + 1;
-            })
+              return (
+                subCodeStr.startsWith(parentCodeStr) &&
+                subCodeStr.length === parentCodeLength + 1
+              );
+            }),
           };
         });
 
         setCategories(categoriesWithSub);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", error);
         setLoading(false);
       }
     };
@@ -107,10 +110,10 @@ const Page = ({ language }) => {
 
     numberInputs.forEach((input) => {
       const val = parseFloat(input.value) || 0;
-      const key = (input.id || input.className || '').toLowerCase();
+      const key = (input.id || input.className || "").toLowerCase();
 
-      if (key.includes('monthly')) monthly += val;
-      if (key.includes('yearly')) yearly += val;
+      if (key.includes("monthly")) monthly += val;
+      if (key.includes("yearly")) yearly += val;
     });
 
     setTotalMonthlySum(monthly);
@@ -121,7 +124,7 @@ const Page = ({ language }) => {
   const handleClear = () => {
     // Clear all parent and sub category inputs dynamically
     const allInputs = document.querySelectorAll('input[type="number"]');
-    allInputs.forEach(input => input.value = '');
+    allInputs.forEach((input) => (input.value = ""));
 
     // Update totals to zero
     updateTotal();
@@ -293,7 +296,7 @@ const Page = ({ language }) => {
         >
           <img
             src={language === "GE" ? Kalata : Basket}
-            className="w-full sm:w-64 lg:w-52 h-auto border rounded shadow mt-5 lg:mt-5 lg:ml-10 hover:opacity-90 transition-opacity max-w-xs"
+            className="w-full sm:w-64 lg:w-52 h-auto border rounded shadow mt-10 lg:mt-10 lg:ml-10 hover:opacity-90 transition-opacity max-w-xs"
             alt="cover"
           />
         </a>
@@ -338,45 +341,65 @@ const Page = ({ language }) => {
               <tr>
                 <th className="border border-gray-300 px-1 py-1 text-left text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1">
-                    <span>{language === "GE" ? "ჯგუფის დასახელება" : "Group Name"}</span>
+                    <span>
+                      {language === "GE" ? "ჯგუფის დასახელება" : "Group Name"}
+                    </span>
                     <InfoTooltip
                       align="left"
-                      text={language === "GE"
-                        ? "დანიშნულების მიხედვით ინდივიდუალური მოხმარების კლასიფიკატორის (COICOP) ჯგუფის დასახელება"
-                        : "Group name according to the Classification of Individual Consumption According to Purpose"}
+                      text={
+                        language === "GE"
+                          ? "დანიშნულების მიხედვით ინდივიდუალური მოხმარების კლასიფიკატორის (COICOP) ჯგუფის დასახელება"
+                          : "Group name according to the Classification of Individual Consumption According to Purpose"
+                      }
                     />
                   </div>
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
-                    <span>{language === "GE" ? "ფასების პროცენტული ცვლილება" : "Percentage Change of Prices"}</span>
+                    <span>
+                      {language === "GE"
+                        ? "ფასების პროცენტული ცვლილება"
+                        : "Percentage Change of Prices"}
+                    </span>
                     <InfoTooltip
-                      text={language === "GE"
-                        ? "ფასების პროცენტული ცვლილება არჩეულ პერიოდებს შორის"
-                        : "Percentage change of the index"}
+                      text={
+                        language === "GE"
+                          ? "ფასების პროცენტული ცვლილება არჩეულ პერიოდებს შორის"
+                          : "Percentage change of the index"
+                      }
                     />
                   </div>
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
-                    <span>{language === "GE"
-                      ? "შინამეურნეობისსაშუალო ხარჯი თვეში"
-                      : "Average Monthly Expenditure of Household "}</span>
+                    <span>
+                      {language === "GE"
+                        ? "შინამეურნეობისსაშუალო ხარჯი თვეში"
+                        : "Average Monthly Expenditure of Household "}
+                    </span>
                     <InfoTooltip
-                      text={language === "GE"
-                        ? "საშუალო სიდიდის შინამეურნეობის (3,3 კაცი) ხარჯი თვეში"
-                        : "Monthly expenditure of an average household (3.3 persons)"}
+                      text={
+                        language === "GE"
+                          ? "საშუალო სიდიდის შინამეურნეობის (3,3 კაცი) ხარჯი თვეში"
+                          : "Monthly expenditure of an average household (3.3 persons)"
+                      }
                     />
                   </div>
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
-                    <span>{language === "GE" ? "პერსონალური ხარჯი (ლარი) " : "Personal Expenditure (GEL)"}</span>
+                    <span>
+                      {language === "GE"
+                        ? "პერსონალური ხარჯი (ლარი) "
+                        : "Personal Expenditure (GEL)"}
+                    </span>
                     <InfoTooltip
                       align="right"
-                      text={language === "GE"
-                        ? "მომხმარებლის მიერ თვეში ან წელიწადში გაწეული ხარჯი"
-                        : "Annual or monthly expenditure amount"}
+                      text={
+                        language === "GE"
+                          ? "მომხმარებლის მიერ თვეში ან წელიწადში გაწეული ხარჯი"
+                          : "Annual or monthly expenditure amount"
+                      }
                     />
                   </div>
                   <div className="flex justify-around mt-0.5 text-[9px] font-normal text-white">
@@ -389,7 +412,10 @@ const Page = ({ language }) => {
             <tbody className="bg-white text-[10px]">
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="border border-gray-300 px-2 py-4 text-center">
+                  <td
+                    colSpan="4"
+                    className="border border-gray-300 px-2 py-4 text-center"
+                  >
                     {language === "GE" ? "იტვირთება..." : "Loading..."}
                   </td>
                 </tr>
@@ -400,7 +426,13 @@ const Page = ({ language }) => {
                       {/* Parent Category Row */}
                       <tr
                         className="hover:bg-gray-50 cursor-pointer bg-white"
-                        onClick={() => setExpandedCategory(expandedCategory === category.code ? null : category.code)}
+                        onClick={() =>
+                          setExpandedCategory(
+                            expandedCategory === category.code
+                              ? null
+                              : category.code
+                          )
+                        }
                       >
                         <td
                           className="border border-gray-300 px-2 py-2"
@@ -410,13 +442,19 @@ const Page = ({ language }) => {
                             <span
                               className="transform transition-transform"
                               style={{
-                                display: 'inline-block',
-                                transform: expandedCategory === category.code ? 'rotate(90deg)' : 'rotate(0deg)'
+                                display: "inline-block",
+                                transform:
+                                  expandedCategory === category.code
+                                    ? "rotate(90deg)"
+                                    : "rotate(0deg)",
+                                color: "#01389c",
                               }}
                             >
-                              ▶
+                              ▶▶
                             </span>
-                            {language === "GE" ? category.name_geo : category.name_en}
+                            {language === "GE"
+                              ? category.name_geo
+                              : category.name_en}
                           </span>
                         </td>
                         <td
@@ -444,7 +482,8 @@ const Page = ({ language }) => {
                               onChange={(e) => {
                                 const monthly = parseFloat(e.target.value) || 0;
                                 const yearlyInput = e.target.nextSibling;
-                                if (yearlyInput) yearlyInput.value = (monthly * 12).toFixed(2);
+                                if (yearlyInput)
+                                  yearlyInput.value = (monthly * 12).toFixed(2);
                                 updateTotal();
                               }}
                             />
@@ -458,7 +497,8 @@ const Page = ({ language }) => {
                               onChange={(e) => {
                                 const yearly = parseFloat(e.target.value) || 0;
                                 const monthlyInput = e.target.previousSibling;
-                                if (monthlyInput) monthlyInput.value = (yearly / 12).toFixed(2);
+                                if (monthlyInput)
+                                  monthlyInput.value = (yearly / 12).toFixed(2);
                                 updateTotal();
                               }}
                             />
@@ -467,62 +507,77 @@ const Page = ({ language }) => {
                       </tr>
 
                       {/* Subcategories (kept in DOM, hidden when collapsed) */}
-                      {category.subcategories && category.subcategories.map((sub) => (
-                        <tr
-                          key={sub.code}
-                          className="hover:bg-gray-50 bg-gray-50"
-                          style={{ display: expandedCategory === category.code ? '' : 'none' }}
-                        >
-                          <td
-                            className="border border-gray-300 px-2 py-2 pl-8"
-                            style={{ color: "#333" }}
+                      {category.subcategories &&
+                        category.subcategories.map((sub) => (
+                          <tr
+                            key={sub.code}
+                            className="hover:bg-gray-50 bg-gray-50"
+                            style={{
+                              display:
+                                expandedCategory === category.code
+                                  ? ""
+                                  : "none",
+                            }}
                           >
-                            <span className="text-[9px]">
-                              {language === "GE" ? sub.name_geo : sub.name_en}
-                            </span>
-                          </td>
-                          <td
-                            className="border border-gray-300 px-2 py-2 text-right"
-                            style={{ color: "#333" }}
-                          >
-                            10.3%
-                          </td>
-                          <td
-                            className="border border-gray-300 px-2 py-2 text-right"
-                            style={{ color: "#333" }}
-                          >
-                            991.00 ₾
-                          </td>
-                          <td className="border border-gray-300 px-2 py-2">
-                            <div className="flex gap-2">
-                              <input
-                                type="number"
-                                min="0"
-                                className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-monthly-${sub.code}`}
-                                style={{ color: "#333" }}
-                                onChange={(e) => {
-                                  const monthly = parseFloat(e.target.value) || 0;
-                                  const yearlyInput = e.target.nextSibling;
-                                  if (yearlyInput) yearlyInput.value = (monthly * 12).toFixed(2);
-                                  updateTotal();
-                                }}
-                              />
-                              <input
-                                type="number"
-                                min="0"
-                                className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-yearly-${sub.code}`}
-                                style={{ color: "#333" }}
-                                onChange={(e) => {
-                                  const yearly = parseFloat(e.target.value) || 0;
-                                  const monthlyInput = e.target.previousSibling;
-                                  if (monthlyInput) monthlyInput.value = (yearly / 12).toFixed(2);
-                                  updateTotal();
-                                }}
-                              />
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            <td
+                              className="border border-gray-300 px-2 py-2 pl-8"
+                              style={{ color: "#333" }}
+                            >
+                              <span className="text-[9px]">
+                                {language === "GE" ? sub.name_geo : sub.name_en}
+                              </span>
+                            </td>
+                            <td
+                              className="border border-gray-300 px-2 py-2 text-right"
+                              style={{ color: "#333" }}
+                            >
+                              10.3%
+                            </td>
+                            <td
+                              className="border border-gray-300 px-2 py-2 text-right"
+                              style={{ color: "#333" }}
+                            >
+                              991.00 ₾
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2">
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-monthly-${sub.code}`}
+                                  style={{ color: "#333" }}
+                                  onChange={(e) => {
+                                    const monthly =
+                                      parseFloat(e.target.value) || 0;
+                                    const yearlyInput = e.target.nextSibling;
+                                    if (yearlyInput)
+                                      yearlyInput.value = (
+                                        monthly * 12
+                                      ).toFixed(2);
+                                    updateTotal();
+                                  }}
+                                />
+                                <input
+                                  type="number"
+                                  min="0"
+                                  className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-yearly-${sub.code}`}
+                                  style={{ color: "#333" }}
+                                  onChange={(e) => {
+                                    const yearly =
+                                      parseFloat(e.target.value) || 0;
+                                    const monthlyInput =
+                                      e.target.previousSibling;
+                                    if (monthlyInput)
+                                      monthlyInput.value = (
+                                        yearly / 12
+                                      ).toFixed(2);
+                                    updateTotal();
+                                  }}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
                     </React.Fragment>
                   ))}
 
@@ -532,9 +587,10 @@ const Page = ({ language }) => {
                       {language === "GE" ? "სულ" : "Total"}
                     </td>
                     <td className="border border-gray-300 px-2 py-2"></td>
-                    <td className="border border-gray-300 px-2 py-2 text-right" id="total-avg">
-
-                    </td>
+                    <td
+                      className="border border-gray-300 px-2 py-2 text-right"
+                      id="total-avg"
+                    ></td>
                     <td className="border border-gray-300 px-2 py-2">
                       <div className="flex gap-2">
                         <input
@@ -585,82 +641,93 @@ const Page = ({ language }) => {
               highcharts={Highcharts}
               options={{
                 chart: {
-                  type: 'column',
+                  type: "column",
                   height: 320,
                   spacingTop: 10,
-                  spacingBottom: 50
+                  spacingBottom: 50,
                 },
                 title: {
-                  text: language === "GE" ? 'ჯგუფების წილი მთლიან ხარჯებში 2025' : 'Share of Group in Total Expenses 2025',
+                  text:
+                    language === "GE"
+                      ? "ჯგუფების წილი მთლიან ხარჯებში 2025"
+                      : "Share of Group in Total Expenses 2025",
                   style: {
-                    fontSize: '11px',
-                    fontFamily: 'bpg_mrgvlovani_caps',
-                    fontWeight: 'bold'
+                    fontSize: "11px",
+                    fontFamily: "bpg_mrgvlovani_caps",
+                    fontWeight: "bold",
                   },
-                  margin: 15
+                  margin: 15,
                 },
                 xAxis: {
-                  categories: categories.map(cat => language === "GE" ? cat.name_geo : cat.name_en),
+                  categories: categories.map((cat) =>
+                    language === "GE" ? cat.name_geo : cat.name_en
+                  ),
                   labels: {
                     style: {
-                      fontFamily: 'bpg_mrgvlovani_caps',
-                      fontSize: '8px'
+                      fontFamily: "bpg_mrgvlovani_caps",
+                      fontSize: "8px",
                     },
                     rotation: -45,
-                    align: 'right'
-                  }
+                    align: "right",
+                  },
                 },
                 yAxis: {
                   title: {
-                    text: '%',
+                    text: "წონა",
                     style: {
-                      fontFamily: 'bpg_mrgvlovani_caps',
-                      fontSize: '10px'
-                    }
+                      fontFamily: "bpg_mrgvlovani_caps",
+                      fontSize: "10px",
+                    },
                   },
                   labels: {
-                    format: '{value}%',
+                    format: "{value}%",
                     style: {
-                      fontFamily: 'bpg_mrgvlovani_caps',
-                      fontSize: '9px'
-                    }
-                  }
+                      fontFamily: "bpg_mrgvlovani_caps",
+                      fontSize: "9px",
+                    },
+                  },
                 },
                 legend: {
                   itemStyle: {
-                    fontFamily: 'bpg_mrgvlovani_caps',
-                    fontSize: '9px'
+                    fontFamily: "bpg_mrgvlovani_caps",
+                    fontSize: "9px",
                   },
                   symbolHeight: 8,
                   symbolWidth: 8,
                   symbolRadius: 2,
-                  itemDistance: 30
+                  itemDistance: 30,
                 },
                 plotOptions: {
                   column: {
                     pointPadding: 0.1,
                     borderWidth: 0,
-                    groupPadding: 0.15
-                  }
+                    groupPadding: 0.15,
+                  },
                 },
-                series: [{
-                  name: language === "GE" ? 'პერსონალური' : 'Personal',
-                  data: [],
-                  color: '#01389c',
-                  tooltip: {
-                    valueSuffix: '%'
-                  }
-                }, {
-                  name: language === "GE" ? 'ოფიციალური' : 'Official',
-                  data: [91.70, 8.30, 5.5, 11.8, 4.3, 4.0, 8.9, 3.1, 6.5, 1.8, 9.5, 3.2],
-                  color: '#e74c3c',
-                  tooltip: {
-                    valueSuffix: '%'
-                  }
-                }],
+                series: [
+                  {
+                    name: language === "GE" ? "პერსონალური" : "Personal",
+                    data: [],
+                    color: "#a6d5ff",
+                    tooltip: {
+                      valueSuffix: "%",
+                    },
+                  },
+                  {
+                    name: language === "GE" ? "ოფიციალური" : "Official",
+                    data: [
+                      91.7, 8.3, 5.5, 11.8, 4.3, 4.0, 8.9, 3.1, 6.5, 1.8, 9.5,
+                      3.2,
+                    ],
+                    color: "#eb695c",
+                    tooltip: {
+                      valueSuffix: "%",
+                    },
+                  },
+                ],
                 credits: {
-                  enabled: false
-                }
+                  enabled: false,
+                },
               }}
             />
           </div>
@@ -671,82 +738,94 @@ const Page = ({ language }) => {
               highcharts={Highcharts}
               options={{
                 chart: {
-                  type: 'line',
+                  type: "line",
                   height: 300,
                   spacingTop: 15,
-                  spacingBottom: 10
+                  spacingBottom: 10,
                 },
                 title: {
-                  text: language === "GE" ? 'ინფლაცია წინა წლის<br/>შესაბამის თვესთან შედარებით' : 'Inflation Compared to<br/>Same Month Last Year',
+                  text:
+                    language === "GE"
+                      ? "ინფლაცია წინა წლის<br/>შესაბამის თვესთან შედარებით"
+                      : "Inflation Compared to<br/>Same Month Last Year",
                   style: {
-                    fontSize: '11px',
-                    fontFamily: 'bpg_mrgvlovani_caps',
-                    fontWeight: 'bold'
+                    fontSize: "11px",
+                    fontFamily: "bpg_mrgvlovani_caps",
+                    fontWeight: "bold",
                   },
                   margin: 20,
-                  useHTML: true
+                  useHTML: true,
                 },
                 xAxis: {
-                  categories: ['2024/01', '2024/06', '2024/11', '2025/05', '2025/11'],
+                  categories: [
+                    "2024/01",
+                    "2024/06",
+                    "2024/11",
+                    "2025/05",
+                    "2025/11",
+                  ],
                   labels: {
                     style: {
-                      fontFamily: 'bpg_mrgvlovani_caps',
-                      fontSize: '10px'
-                    }
-                  }
+                      fontFamily: "bpg_mrgvlovani_caps",
+                      fontSize: "10px",
+                    },
+                  },
                 },
                 yAxis: {
                   title: {
-                    text: '%',
+                    text: "",
                     style: {
-                      fontFamily: 'bpg_mrgvlovani_caps',
-                      fontSize: '10px'
-                    }
+                      fontFamily: "bpg_mrgvlovani_caps",
+                      fontSize: "10px",
+                    },
                   },
                   labels: {
-                    format: '{value}%',
+                    format: "{value}%",
                     style: {
-                      fontFamily: 'bpg_mrgvlovani_caps',
-                      fontSize: '9px'
-                    }
-                  }
+                      fontFamily: "bpg_mrgvlovani_caps",
+                      fontSize: "9px",
+                    },
+                  },
                 },
                 legend: {
                   itemStyle: {
-                    fontFamily: 'bpg_mrgvlovani_caps',
-                    fontSize: '9px'
+                    fontFamily: "bpg_mrgvlovani_caps",
+                    fontSize: "9px",
                   },
                   symbolHeight: 8,
                   symbolWidth: 8,
                   symbolRadius: 2,
-                  itemDistance: 30
+                  itemDistance: 30,
                 },
                 plotOptions: {
                   line: {
                     lineWidth: 2,
                     marker: {
-                      radius: 3
-                    }
-                  }
+                      radius: 3,
+                    },
+                  },
                 },
-                series: [{
-                  name: language === "GE" ? 'პერსონალური' : 'Personal',
-                  data: [3.5, 4.2, 4.8, 5.1, 4.8],
-                  color: '#01389c',
-                  tooltip: {
-                    valueSuffix: '%'
-                  }
-                }, {
-                  name: language === "GE" ? 'ოფიციალური' : 'Official',
-                  data: [4.0, 4.5, 5.0, 5.3, 5.0],
-                  color: '#e74c3c',
-                  tooltip: {
-                    valueSuffix: '%'
-                  }
-                }],
+                series: [
+                  {
+                    name: language === "GE" ? "პერსონალური" : "Personal",
+                    data: [3.5, 4.2, 4.8, 5.1, 4.8],
+                    color: "#a6d5ff",
+                    tooltip: {
+                      valueSuffix: "%",
+                    },
+                  },
+                  {
+                    name: language === "GE" ? "ოფიციალური" : "Official",
+                    data: [4.0, 4.5, 5.0, 5.3, 5.0],
+                    color: "#eb695c",
+                    tooltip: {
+                      valueSuffix: "%",
+                    },
+                  },
+                ],
                 credits: {
-                  enabled: false
-                }
+                  enabled: false,
+                },
               }}
             />
           </div>
