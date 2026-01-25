@@ -40,6 +40,7 @@ const Page = ({ language }) => {
   const [loading, setLoading] = useState(true);
   const [totalMonthlySum, setTotalMonthlySum] = useState(0);
   const [totalYearlySum, setTotalYearlySum] = useState(0);
+  const [infoGroups, setInfoGroups] = useState(null);
 
   // Fetch categories from API
   useEffect(() => {
@@ -130,6 +131,33 @@ const Page = ({ language }) => {
     updateTotal();
   };
 
+  // Fetch info groups from API
+  const fetchInfoGroups = async (fromDate, toDate) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/infogroups?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`
+      );
+      const data = await response.json();
+      setInfoGroups(data);
+      console.log("Info Groups:", data);
+    } catch (error) {
+      console.error("Error fetching info groups:", error);
+      setInfoGroups(null);
+    }
+  };
+
+  // Handle start date change
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+    fetchInfoGroups(date, endDate);
+  };
+
+  // Handle end date change
+  const handleEndDateChange = (date) => {
+    setEndDate(date);
+    fetchInfoGroups(startDate, date);
+  };
+
   return (
     <div
       className="bg-white shadow-md bpg_mrgvlovani_caps w-full"
@@ -198,7 +226,7 @@ const Page = ({ language }) => {
                 <DatePicker
                   ref={startDateRef}
                   selected={startDate}
-                  onChange={(date) => setStartDate(date)}
+                  onChange={handleStartDateChange}
                   dateFormat="MM/yyyy"
                   showMonthYearPicker
                   className="px-3 py-2 w-full outline-none"
@@ -223,7 +251,7 @@ const Page = ({ language }) => {
                 <DatePicker
                   ref={endDateRef}
                   selected={endDate}
-                  onChange={(date) => setEndDate(date)}
+                  onChange={handleEndDateChange}
                   dateFormat="MM/yyyy"
                   showMonthYearPicker
                   className="px-3 py-2 w-full outline-none"
@@ -284,6 +312,18 @@ const Page = ({ language }) => {
                 readOnly
               />
             </div>
+
+            {/* Info Groups Results */}
+            {infoGroups && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-300 rounded">
+                <h4 className="font-bold text-blue-900 mb-2">
+                  {language === "GE" ? "ინფორმაციის ჯგუფები:" : "Info Groups:"}
+                </h4>
+                <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-40">
+                  {JSON.stringify(infoGroups, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         </div>
 
