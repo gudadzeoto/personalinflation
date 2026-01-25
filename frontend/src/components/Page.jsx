@@ -30,8 +30,8 @@ const InfoTooltip = ({ text, align = "center" }) => {
 };
 
 const Page = ({ language }) => {
-  const [startDate, setStartDate] = useState(new Date(2024, 10)); // November 2024
-  const [endDate, setEndDate] = useState(new Date(2025, 10)); // November 2025
+  const [startDate, setStartDate] = useState(new Date(2024, 11)); // November 2024
+  const [endDate, setEndDate] = useState(new Date(2025, 11)); // November 2025
   const startDateRef = useRef(null);
   const endDateRef = useRef(null);
   const [dateError, setDateError] = useState("");
@@ -41,6 +41,8 @@ const Page = ({ language }) => {
   const [totalMonthlySum, setTotalMonthlySum] = useState(0);
   const [totalYearlySum, setTotalYearlySum] = useState(0);
   const [officialInflationRate, setOfficialInflationRate] = useState("0.0%");
+  const [groupData, setGroupData] = useState({});
+  const [subGroupData, setSubGroupData] = useState({});
 
   // Fetch categories from API
   useEffect(() => {
@@ -85,6 +87,7 @@ const Page = ({ language }) => {
   // Fetch info groups on page load with default dates
   useEffect(() => {
     fetchInfoGroups(startDate, endDate);
+    fetchSubGroupIndex(startDate, endDate);
   }, []);
 
   // Format date to display as YYYY/MM
@@ -155,6 +158,25 @@ const Page = ({ language }) => {
           const roundedRate = inflationRate.toFixed(1);
           setOfficialInflationRate(`${roundedRate}%`);
         }
+
+        // Calculate inflation rates for each group (Group1, Group2, Group3, etc.)
+        const groupCalculations = {};
+        const groupKeys = Object.keys(data[0]).filter((key) =>
+          key.match(/^Group\d+$/)
+        );
+
+        groupKeys.forEach((groupKey) => {
+          const startGroupValue = data[0][groupKey];
+          const endGroupValue = data[data.length - 1][groupKey];
+
+          if (startGroupValue && endGroupValue) {
+            const groupInflationRate =
+              (endGroupValue / startGroupValue) * 100 - 100;
+            groupCalculations[groupKey] = groupInflationRate.toFixed(1);
+          }
+        });
+
+        setGroupData(groupCalculations);
       }
 
     } catch (error) {
@@ -162,16 +184,52 @@ const Page = ({ language }) => {
     }
   };
 
+  // Fetch subgroup index from API
+  const fetchSubGroupIndex = async (fromDate, toDate) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/subgroupindex?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`
+      );
+      const data = await response.json();
+
+      // Calculate inflation rates for each subgroup dynamically
+      if (data && data.length > 0) {
+        const subGroupCalculations = {};
+        const subGroupKeys = Object.keys(data[0]).filter((key) =>
+          key.match(/^grp\d+sub\d+$/i)
+        );
+
+        subGroupKeys.forEach((subGroupKey) => {
+          const startSubGroupValue = data[0][subGroupKey];
+          const endSubGroupValue = data[data.length - 1][subGroupKey];
+
+          if (startSubGroupValue && endSubGroupValue) {
+            const subGroupInflationRate =
+              (endSubGroupValue / startSubGroupValue) * 100 - 100;
+            subGroupCalculations[subGroupKey] = subGroupInflationRate.toFixed(1);
+          }
+        });
+
+        setSubGroupData(subGroupCalculations);
+      }
+
+    } catch (error) {
+      console.error("Error fetching subgroup index:", error);
+    }
+  };
+
   // Handle start date change
   const handleStartDateChange = (date) => {
     setStartDate(date);
     fetchInfoGroups(date, endDate);
+    fetchSubGroupIndex(date, endDate);
   };
 
   // Handle end date change
   const handleEndDateChange = (date) => {
     setEndDate(date);
     fetchInfoGroups(startDate, date);
+    fetchSubGroupIndex(startDate, date);
   };
 
   return (
@@ -418,8 +476,8 @@ const Page = ({ language }) => {
                   <div className="flex items-center gap-1 justify-center">
                     <span>
                       {language === "GE"
-                        ? "შინამეურნეობისსაშუალო ხარჯი თვეში"
-                        : "Average Monthly Expenditure of Household "}
+                        ? "შინამეურნეობის საშუალო ხარჯი თვეში"
+                        : "Average Monthly Expenditure of Household"}
                     </span>
                     <InfoTooltip
                       text={
@@ -505,7 +563,9 @@ const Page = ({ language }) => {
                           className="border border-gray-300 px-2 py-2 text-right"
                           style={{ color: "#333" }}
                         >
-                          10.3%
+                          {groupData[`Group${category.code}`] !== undefined
+                            ? `${groupData[`Group${category.code}`]}%`
+                            : "0%"}
                         </td>
                         <td
                           className="border border-gray-300 px-2 py-2 text-right"
@@ -575,7 +635,9 @@ const Page = ({ language }) => {
                               className="border border-gray-300 px-2 py-2 text-right"
                               style={{ color: "#333" }}
                             >
-                              10.3%
+                              {subGroupData[`grp${category.code}sub${sub.code % 10}`] !== undefined
+                                ? `${subGroupData[`grp${category.code}sub${sub.code % 10}`]}%`
+                                : "0%"}
                             </td>
                             <td
                               className="border border-gray-300 px-2 py-2 text-right"
