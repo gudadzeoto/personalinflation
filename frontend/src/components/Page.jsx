@@ -40,6 +40,7 @@ const Page = ({ language }) => {
   const [loading, setLoading] = useState(true);
   const [totalMonthlySum, setTotalMonthlySum] = useState(0);
   const [totalYearlySum, setTotalYearlySum] = useState(0);
+  const [officialInflationRate, setOfficialInflationRate] = useState("0.0%");
 
   // Fetch categories from API
   useEffect(() => {
@@ -79,6 +80,11 @@ const Page = ({ language }) => {
     };
 
     fetchCategories();
+  }, []);
+
+  // Fetch info groups on page load with default dates
+  useEffect(() => {
+    fetchInfoGroups(startDate, endDate);
   }, []);
 
   // Format date to display as YYYY/MM
@@ -128,6 +134,44 @@ const Page = ({ language }) => {
 
     // Update totals to zero
     updateTotal();
+  };
+
+  // Fetch info groups from API
+  const fetchInfoGroups = async (fromDate, toDate) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/infogroups?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`
+      );
+      const data = await response.json();
+      console.log("Info Groups:", data);
+
+      // Calculate official inflation rate using formula: (enddate / startdate) * 100 - 100
+      if (data && data.length > 0) {
+        const startValue = data[0].GroupTotal; // Value at start date
+        const endValue = data[data.length - 1].GroupTotal; // Value at end date
+
+        if (startValue && endValue) {
+          const inflationRate = (endValue / startValue) * 100 - 100;
+          const roundedRate = inflationRate.toFixed(1);
+          setOfficialInflationRate(`${roundedRate}%`);
+        }
+      }
+
+    } catch (error) {
+      console.error("Error fetching info groups:", error);
+    }
+  };
+
+  // Handle start date change
+  const handleStartDateChange = (date) => {
+    setStartDate(date);
+    fetchInfoGroups(date, endDate);
+  };
+
+  // Handle end date change
+  const handleEndDateChange = (date) => {
+    setEndDate(date);
+    fetchInfoGroups(startDate, date);
   };
 
   return (
@@ -198,7 +242,7 @@ const Page = ({ language }) => {
                 <DatePicker
                   ref={startDateRef}
                   selected={startDate}
-                  onChange={(date) => setStartDate(date)}
+                  onChange={handleStartDateChange}
                   dateFormat="MM/yyyy"
                   showMonthYearPicker
                   className="px-3 py-2 w-full outline-none"
@@ -223,7 +267,7 @@ const Page = ({ language }) => {
                 <DatePicker
                   ref={endDateRef}
                   selected={endDate}
-                  onChange={(date) => setEndDate(date)}
+                  onChange={handleEndDateChange}
                   dateFormat="MM/yyyy"
                   showMonthYearPicker
                   className="px-3 py-2 w-full outline-none"
@@ -261,7 +305,7 @@ const Page = ({ language }) => {
 
               <input
                 className="border border-gray-400 rounded px-3 py-2 w-full sm:w-55 text-right bg-gray-50 focus:border-blue-800 focus:outline-none transition-colors"
-                value="4.8%"
+                value={officialInflationRate}
                 readOnly
               />
             </div>
