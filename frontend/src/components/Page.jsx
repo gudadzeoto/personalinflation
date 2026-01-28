@@ -122,7 +122,7 @@ const Page = ({ language }) => {
     }
   }, [startDate, endDate, language]);
 
-  // Function to update total values
+  // Function to update total values - only parent categories
   const updateTotal = () => {
     const numberInputs = document.querySelectorAll('input[type="number"]');
 
@@ -133,8 +133,9 @@ const Page = ({ language }) => {
       const val = parseFloat(input.value) || 0;
       const key = (input.id || input.className || "").toLowerCase();
 
-      if (key.includes("monthly")) monthly += val;
-      if (key.includes("yearly")) yearly += val;
+      // Only include parent category inputs, exclude subcategories
+      if (key.includes("parent-monthly")) monthly += val;
+      if (key.includes("parent-yearly")) yearly += val;
     });
 
     setTotalMonthlySum(monthly);
@@ -190,7 +191,7 @@ const Page = ({ language }) => {
           if (startGroupValue && endGroupValue) {
             const groupInflationRate =
               (endGroupValue / startGroupValue) * 100 - 100;
-            groupCalculations[groupKey] = groupInflationRate.toFixed(1);
+            groupCalculations[groupKey] = groupInflationRate.toFixed(2);
           }
         });
 
@@ -224,7 +225,7 @@ const Page = ({ language }) => {
           if (startSubGroupValue && endSubGroupValue) {
             const subGroupInflationRate =
               (endSubGroupValue / startSubGroupValue) * 100 - 100;
-            subGroupCalculations[subGroupKey] = subGroupInflationRate.toFixed(1);
+            subGroupCalculations[subGroupKey] = subGroupInflationRate.toFixed(2);
           }
         });
 
@@ -685,6 +686,29 @@ const Page = ({ language }) => {
                                 const yearlyInput = e.target.nextSibling;
                                 if (yearlyInput)
                                   yearlyInput.value = (monthly * 12).toFixed(2);
+
+                                // Update subcategory values based on weights
+                                if (category.subcategories) {
+                                  category.subcategories.forEach((sub) => {
+                                    const weightKey = `grp${category.code}sub${sub.code % 10}`;
+                                    const weight = subGroupWeights[weightKey] || 1;
+                                    const subMonthlyValue = monthly * weight;
+                                    const subYearlyValue = subMonthlyValue * 12;
+
+                                    // Update subcategory monthly input
+                                    const subMonthlyInput = document.querySelector(`.sub-monthly-${sub.code}`);
+                                    if (subMonthlyInput) {
+                                      subMonthlyInput.value = subMonthlyValue.toFixed(2);
+                                    }
+
+                                    // Update subcategory yearly input
+                                    const subYearlyInput = document.querySelector(`.sub-yearly-${sub.code}`);
+                                    if (subYearlyInput) {
+                                      subYearlyInput.value = subYearlyValue.toFixed(2);
+                                    }
+                                  });
+                                }
+
                                 updateTotal();
                               }}
                             />
@@ -700,6 +724,29 @@ const Page = ({ language }) => {
                                 const monthlyInput = e.target.previousSibling;
                                 if (monthlyInput)
                                   monthlyInput.value = (yearly / 12).toFixed(2);
+
+                                // Update subcategory values based on weights
+                                if (category.subcategories) {
+                                  category.subcategories.forEach((sub) => {
+                                    const weightKey = `grp${category.code}sub${sub.code % 10}`;
+                                    const weight = subGroupWeights[weightKey] || 1;
+                                    const subYearlyValue = yearly * weight;
+                                    const subMonthlyValue = subYearlyValue / 12;
+
+                                    // Update subcategory monthly input
+                                    const subMonthlyInput = document.querySelector(`.sub-monthly-${sub.code}`);
+                                    if (subMonthlyInput) {
+                                      subMonthlyInput.value = subMonthlyValue.toFixed(2);
+                                    }
+
+                                    // Update subcategory yearly input
+                                    const subYearlyInput = document.querySelector(`.sub-yearly-${sub.code}`);
+                                    if (subYearlyInput) {
+                                      subYearlyInput.value = subYearlyValue.toFixed(2);
+                                    }
+                                  });
+                                }
+
                                 updateTotal();
                               }}
                             />
@@ -752,13 +799,29 @@ const Page = ({ language }) => {
                                   className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-monthly-${sub.code}`}
                                   style={{ color: "#333" }}
                                   onChange={(e) => {
-                                    const monthly =
-                                      parseFloat(e.target.value) || 0;
+                                    const monthly = parseFloat(e.target.value) || 0;
                                     const yearlyInput = e.target.nextSibling;
                                     if (yearlyInput)
-                                      yearlyInput.value = (
-                                        monthly * 12
-                                      ).toFixed(2);
+                                      yearlyInput.value = (monthly * 12).toFixed(2);
+
+                                    // Update parent monthly value to sum of all subcategory monthly values
+                                    const parentMonthlyInput = document.querySelector(`#parent-monthly-${category.code}`);
+                                    if (parentMonthlyInput && category.subcategories) {
+                                      let totalMonthly = 0;
+                                      category.subcategories.forEach((sub) => {
+                                        const subMonthlyInput = document.querySelector(`.sub-monthly-${sub.code}`);
+                                        if (subMonthlyInput) {
+                                          totalMonthly += parseFloat(subMonthlyInput.value) || 0;
+                                        }
+                                      });
+                                      parentMonthlyInput.value = totalMonthly.toFixed(2);
+
+                                      // Also update parent yearly
+                                      const parentYearlyInput = document.querySelector(`#parent-yearly-${category.code}`);
+                                      if (parentYearlyInput) {
+                                        parentYearlyInput.value = (totalMonthly * 12).toFixed(2);
+                                      }
+                                    }
                                     updateTotal();
                                   }}
                                 />
@@ -768,14 +831,29 @@ const Page = ({ language }) => {
                                   className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-yearly-${sub.code}`}
                                   style={{ color: "#333" }}
                                   onChange={(e) => {
-                                    const yearly =
-                                      parseFloat(e.target.value) || 0;
-                                    const monthlyInput =
-                                      e.target.previousSibling;
+                                    const yearly = parseFloat(e.target.value) || 0;
+                                    const monthlyInput = e.target.previousSibling;
                                     if (monthlyInput)
-                                      monthlyInput.value = (
-                                        yearly / 12
-                                      ).toFixed(2);
+                                      monthlyInput.value = (yearly / 12).toFixed(2);
+
+                                    // Update parent yearly value to sum of all subcategory yearly values
+                                    const parentYearlyInput = document.querySelector(`#parent-yearly-${category.code}`);
+                                    if (parentYearlyInput && category.subcategories) {
+                                      let totalYearly = 0;
+                                      category.subcategories.forEach((sub) => {
+                                        const subYearlyInput = document.querySelector(`.sub-yearly-${sub.code}`);
+                                        if (subYearlyInput) {
+                                          totalYearly += parseFloat(subYearlyInput.value) || 0;
+                                        }
+                                      });
+                                      parentYearlyInput.value = totalYearly.toFixed(2);
+
+                                      // Also update parent monthly
+                                      const parentMonthlyInput = document.querySelector(`#parent-monthly-${category.code}`);
+                                      if (parentMonthlyInput) {
+                                        parentMonthlyInput.value = (totalYearly / 12).toFixed(2);
+                                      }
+                                    }
                                     updateTotal();
                                   }}
                                 />
@@ -923,7 +1001,7 @@ const Page = ({ language }) => {
                   {
                     name: language === "GE" ? "ოფიციალური" : "Official",
                     data: [
-                      91.7, 8.3, 5.5, 11.8, 4.3, 4.0, 8.9, 3.1, 6.5, 1.8, 9.5,
+                      34.5, 6.4, 4.7, 9.8, 4.3, 4.0, 8.9, 3.1, 6.5, 1.8, 9.5,
                       3.2,
                     ],
                     color: "#eb695c",
