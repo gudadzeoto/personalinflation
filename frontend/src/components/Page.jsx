@@ -43,6 +43,7 @@ const Page = ({ language }) => {
   const [officialInflationRate, setOfficialInflationRate] = useState("0.0%");
   const [groupData, setGroupData] = useState({});
   const [subGroupData, setSubGroupData] = useState({});
+  const [groupPrices, setGroupPrices] = useState({});
 
   // Fetch categories from API
   useEffect(() => {
@@ -88,6 +89,7 @@ const Page = ({ language }) => {
   useEffect(() => {
     fetchInfoGroups(startDate, endDate);
     fetchSubGroupIndex(startDate, endDate);
+    fetchGroupPrices(endDate.getFullYear());
   }, []);
 
   // Format date to display as YYYY/MM
@@ -218,6 +220,35 @@ const Page = ({ language }) => {
     }
   };
 
+  // Fetch group prices from API
+  const fetchGroupPrices = async (year) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/groupprices?year=${year}`
+      );
+      const data = await response.json();
+      console.log("Group Prices:", data);
+
+      // Create a map of group prices dynamically
+      if (data && data.length > 0) {
+        const groupPricesMap = {};
+        const groupPriceKeys = Object.keys(data[0]).filter((key) =>
+          key.match(/^Group\d+$/)
+        );
+
+        groupPriceKeys.forEach((groupKey) => {
+          groupPricesMap[groupKey] = parseFloat(data[0][groupKey]);
+        });
+
+        console.log("groupPricesMap:", groupPricesMap);
+        setGroupPrices(groupPricesMap);
+      }
+
+    } catch (error) {
+      console.error("Error fetching group prices:", error);
+    }
+  };
+
   // Handle start date change
   const handleStartDateChange = (date) => {
     setStartDate(date);
@@ -230,6 +261,7 @@ const Page = ({ language }) => {
     setEndDate(date);
     fetchInfoGroups(startDate, date);
     fetchSubGroupIndex(startDate, date);
+    fetchGroupPrices(date.getFullYear());
   };
 
   return (
@@ -572,7 +604,9 @@ const Page = ({ language }) => {
                           style={{ color: "#333" }}
                           id={`parent-avg-${category.code}`}
                         >
-                          1077.07 ₾
+                          {groupPrices[`Group${category.code}`] !== undefined
+                            ? `${parseFloat(groupPrices[`Group${category.code}`]).toFixed(2)} ₾`
+                            : "0 ₾"}
                         </td>
                         <td className="border border-gray-300 px-2 py-2">
                           <div className="flex gap-2">
