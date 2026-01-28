@@ -4,6 +4,7 @@ const personaltitleRoute = require("./routes/personaltitle");
 const infogroupsRoute = require("./routes/infogroups");
 const subgroupindexRoute = require("./routes/subgroupindex");
 const grouppricesRoute = require("./routes/groupprices");
+const subgroupweightsRoute = require("./routes/subgroupweights");
 
 
 
@@ -17,6 +18,7 @@ app.use("/api/personaltitle", personaltitleRoute);
 app.use("/api/infogroups", infogroupsRoute);
 app.use("/api/subgroupindex", subgroupindexRoute);
 app.use("/api/groupprices", grouppricesRoute);
+app.use("/api/subgroupweights", subgroupweightsRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

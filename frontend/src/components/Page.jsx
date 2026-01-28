@@ -44,6 +44,8 @@ const Page = ({ language }) => {
   const [groupData, setGroupData] = useState({});
   const [subGroupData, setSubGroupData] = useState({});
   const [groupPrices, setGroupPrices] = useState({});
+  const [subGroupWeights, setSubGroupWeights] = useState({});
+  const [subCategoryPrices, setSubCategoryPrices] = useState({});
 
   // Fetch categories from API
   useEffect(() => {
@@ -90,7 +92,22 @@ const Page = ({ language }) => {
     fetchInfoGroups(startDate, endDate);
     fetchSubGroupIndex(startDate, endDate);
     fetchGroupPrices(endDate.getFullYear());
+    fetchSubGroupWeights(endDate.getFullYear());
   }, []);
+
+  // Recalculate subcategory prices whenever groupPrices or subGroupWeights change
+  useEffect(() => {
+    console.log("useEffect triggered - groupPrices and subGroupWeights changed");
+    console.log("groupPrices length:", Object.keys(groupPrices).length);
+    console.log("subGroupWeights length:", Object.keys(subGroupWeights).length);
+
+    if (Object.keys(groupPrices).length > 0 && Object.keys(subGroupWeights).length > 0) {
+      console.log("Calling calculateSubCategoryPrices...");
+      calculateSubCategoryPrices(groupPrices, subGroupWeights);
+    } else {
+      console.log("Skipping calculation - missing data");
+    }
+  }, [groupPrices, subGroupWeights]);
 
   // Format date to display as YYYY/MM
   const formatDate = (date) => {
@@ -249,6 +266,91 @@ const Page = ({ language }) => {
     }
   };
 
+  // Fetch subgroup weights from API
+  const fetchSubGroupWeights = async (year) => {
+    try {
+      console.log(`Fetching subgroup weights for year: ${year}`);
+      const response = await fetch(
+        `http://localhost:5000/api/subgroupweights?year=${year}`
+      );
+      const data = await response.json();
+      console.log("Subgroup Weights Raw Response:", data);
+      console.log("Response is array?", Array.isArray(data));
+      console.log("Response length:", data?.length);
+
+      if (data && Array.isArray(data)) {
+        console.log("First record keys:", Object.keys(data[0] || {}));
+      }
+
+      // Create a map of subgroup weights dynamically
+      if (data && data.length > 0) {
+        const subGroupWeightsMap = {};
+        const subGroupWeightKeys = Object.keys(data[0]).filter((key) =>
+          key.match(/^grp\d+sub\d+$/i)
+        );
+
+        subGroupWeightKeys.forEach((weightKey) => {
+          subGroupWeightsMap[weightKey] = parseFloat(data[0][weightKey]);
+        });
+
+        console.log("subGroupWeightsMap:", subGroupWeightsMap);
+        console.log("subGroupWeightKeys found:", Object.keys(data[0]).filter((key) =>
+          key.match(/^grp\d+sub\d+$/i)
+        ));
+        setSubGroupWeights(subGroupWeightsMap);
+      } else {
+        console.log("No data returned from subgroup weights API");
+        console.log("data is:", data);
+      }
+
+    } catch (error) {
+      console.error("Error fetching subgroup weights:", error);
+      console.error("Error details:", error.message);
+    }
+  };
+
+  // Calculate subcategory prices based on group prices and subgroup weights
+  const calculateSubCategoryPrices = (groupPricesMap, weightsMap) => {
+    console.log("=== CALCULATION DEBUG ===");
+    console.log("groupPricesMap:", groupPricesMap);
+    console.log("weightsMap:", weightsMap);
+    console.log("groupPricesMap keys:", Object.keys(groupPricesMap));
+    console.log("weightsMap keys:", Object.keys(weightsMap));
+
+    const prices = {};
+
+    Object.keys(weightsMap).forEach((weightKey) => {
+      console.log(`\nProcessing weightKey: ${weightKey}`);
+
+      // Extract group number from weight key (e.g., "grp1sub1" -> "1")
+      const match = weightKey.match(/grp(\d+)sub/i);
+      console.log(`Match result: ${match}`);
+
+      if (match) {
+        const groupNum = match[1];
+        const groupKey = `Group${groupNum}`;
+        const groupPrice = groupPricesMap[groupKey];
+        const weight = weightsMap[weightKey];
+
+        console.log(`groupNum: ${groupNum}, groupKey: ${groupKey}`);
+        console.log(`groupPrice: ${groupPrice}, weight: ${weight}`);
+
+        if (groupPrice !== undefined) {
+          prices[weightKey] = groupPrice * weight;
+          console.log(`✓ Calculated ${weightKey}: ${groupPrice} * ${weight} = ${prices[weightKey]}`);
+        } else {
+          console.log(`✗ groupPrice undefined for ${groupKey}`);
+        }
+      } else {
+        console.log(`✗ No match for pattern in ${weightKey}`);
+      }
+    });
+
+    console.log("Final prices:", prices);
+    console.log("=== END DEBUG ===");
+    setSubCategoryPrices(prices);
+  };
+
   // Handle start date change
   const handleStartDateChange = (date) => {
     setStartDate(date);
@@ -262,6 +364,7 @@ const Page = ({ language }) => {
     fetchInfoGroups(startDate, date);
     fetchSubGroupIndex(startDate, date);
     fetchGroupPrices(date.getFullYear());
+    fetchSubGroupWeights(date.getFullYear());
   };
 
   return (
@@ -677,7 +780,9 @@ const Page = ({ language }) => {
                               className="border border-gray-300 px-2 py-2 text-right"
                               style={{ color: "#333" }}
                             >
-                              991.00 ₾
+                              {subCategoryPrices[`grp${category.code}sub${sub.code % 10}`] !== undefined
+                                ? `${subCategoryPrices[`grp${category.code}sub${sub.code % 10}`].toFixed(2)} ₾`
+                                : "0 ₾"}
                             </td>
                             <td className="border border-gray-300 px-2 py-2">
                               <div className="flex gap-2">
