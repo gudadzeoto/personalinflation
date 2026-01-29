@@ -5,6 +5,7 @@ import "../styles/datepicker-custom.css";
 import Kalata from "../assets/images/Kalata.jpg";
 import Basket from "../assets/images/Basket.jpg";
 import PdfIcon from "../assets/images/pdf.png";
+import InfoModal from "./InfoModal";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
@@ -47,6 +48,7 @@ const Page = ({ language }) => {
   const [subGroupWeights, setSubGroupWeights] = useState({});
   const [subCategoryPrices, setSubCategoryPrices] = useState({});
   const [darkMode, setDarkMode] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch categories from API
   useEffect(() => {
@@ -372,6 +374,14 @@ const Page = ({ language }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {isModalOpen && (
+        <InfoModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          language={language}
+        />
       )}
 
       {/* --- Everything in One Row --- */}
@@ -1130,6 +1140,7 @@ const Page = ({ language }) => {
         </div>
       </div>
     </div>
+
   );
 };
 
