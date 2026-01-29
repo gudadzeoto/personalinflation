@@ -49,6 +49,7 @@ const Page = ({ language }) => {
   const [subCategoryPrices, setSubCategoryPrices] = useState({});
   const [darkMode, setDarkMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [personalInflationRate, setPersonalInflationRate] = useState("0%");
 
   // Fetch categories from API
   useEffect(() => {
@@ -104,6 +105,11 @@ const Page = ({ language }) => {
       calculateSubCategoryPrices(groupPrices, subGroupWeights);
     }
   }, [groupPrices, subGroupWeights]);
+
+  // Recalculate personal inflation rate dynamically whenever totals or group data change
+  useEffect(() => {
+    setPersonalInflationRate(calculatePersonalInflationRate());
+  }, [totalMonthlySum, groupData, categories]);
 
   // Format date to display as YYYY/MM
   const formatDate = (date) => {
@@ -194,7 +200,7 @@ const Page = ({ language }) => {
           if (startGroupValue && endGroupValue) {
             const groupInflationRate =
               (endGroupValue / startGroupValue) * 100 - 100;
-            groupCalculations[groupKey] = groupInflationRate.toFixed(2);
+            groupCalculations[groupKey] = groupInflationRate.toFixed(1);
           }
         });
 
@@ -313,6 +319,32 @@ const Page = ({ language }) => {
     });
 
     setSubCategoryPrices(prices);
+  };
+
+  // Calculate personal inflation rate
+  const calculatePersonalInflationRate = () => {
+    const totalMonthlyInput = document.querySelector('#total-monthly');
+    const totalMonthly = parseFloat(totalMonthlyInput?.value) || 0;
+
+    if (totalMonthly === 0) {
+      return "0%";
+    }
+
+    let weightedInflationSum = 0;
+
+    categories.forEach((category) => {
+      const parentMonthlyInput = document.querySelector(`#parent-monthly-${category.code}`);
+      const parentMonthlyValue = parseFloat(parentMonthlyInput?.value) || 0;
+      const inflationRate = parseFloat(groupData[`Group${category.code}`]) || 0;
+
+      // Weight = (parent monthly value / total monthly) * inflation rate
+      if (totalMonthly > 0) {
+        const weight = (parentMonthlyValue / totalMonthly) * inflationRate;
+        weightedInflationSum += weight;
+      }
+    });
+
+    return `${weightedInflationSum.toFixed(1)}%`;
   };
 
   // Toggle dark mode
@@ -508,7 +540,7 @@ const Page = ({ language }) => {
 
               <input
                 className="border border-gray-400 rounded px-3 py-2 w-full sm:w-55 text-right focus:border-blue-800 focus:outline-none transition-colors"
-                value="0%"
+                value={personalInflationRate}
                 readOnly
                 style={{ backgroundColor: darkMode ? "#374151" : "#f3f4f6", color: darkMode ? "#fff" : "#333" }}
               />
@@ -766,6 +798,7 @@ const Page = ({ language }) => {
                                 }
 
                                 updateTotal();
+                                setPersonalInflationRate(calculatePersonalInflationRate());
                               }}
                             />
                             <input
@@ -779,7 +812,7 @@ const Page = ({ language }) => {
                                 const yearly = parseFloat(e.target.value) || 0;
                                 const monthlyInput = e.target.previousSibling;
                                 if (monthlyInput)
-                                  monthlyInput.value = (yearly / 12).toFixed(2);
+                                  monthlyInput.value = (yearly / 12).toFixed();
 
                                 // Update subcategory values based on weights
                                 if (category.subcategories) {
@@ -804,6 +837,7 @@ const Page = ({ language }) => {
                                 }
 
                                 updateTotal();
+                                setPersonalInflationRate(calculatePersonalInflationRate());
                               }}
                             />
                           </div>
@@ -879,6 +913,7 @@ const Page = ({ language }) => {
                                       }
                                     }
                                     updateTotal();
+                                    setPersonalInflationRate(calculatePersonalInflationRate());
                                   }}
                                 />
                                 <input
@@ -911,6 +946,7 @@ const Page = ({ language }) => {
                                       }
                                     }
                                     updateTotal();
+                                    setPersonalInflationRate(calculatePersonalInflationRate());
                                   }}
                                 />
                               </div>
@@ -931,13 +967,13 @@ const Page = ({ language }) => {
                       id="total-avg"
                       style={{ color: "white" }}
                     >
-                      {getTotalGroupPrices().toFixed(2)} ₾
+                      {getTotalGroupPrices().toFixed(1)} ₾
                     </td>
                     <td className="px-2 py-2">
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          value={totalMonthlySum.toFixed(2)}
+                          value={totalMonthlySum.toFixed(1)}
                           readOnly
                           className="border border-gray-400 rounded px-2 py-1 w-27 text-right total-monthly"
                           style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
@@ -945,7 +981,7 @@ const Page = ({ language }) => {
                         />
                         <input
                           type="text"
-                          value={totalYearlySum.toFixed(2)}
+                          value={totalYearlySum.toFixed(1)}
                           readOnly
                           className="border border-gray-400 rounded px-2 py-1 w-27 text-right total-yearly"
                           style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
