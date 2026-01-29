@@ -320,6 +320,15 @@ const Page = ({ language }) => {
     setDarkMode(!darkMode);
   };
 
+  // Toggle all categories expanded/collapsed
+  const toggleAllCategories = () => {
+    if (expandedCategory === "all") {
+      setExpandedCategory(null);
+    } else {
+      setExpandedCategory("all");
+    }
+  };
+
   // Handle start date change
   const handleStartDateChange = (date) => {
     setStartDate(date);
@@ -573,6 +582,31 @@ const Page = ({ language }) => {
                       }
                     />
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleAllCategories();
+                    }}
+                    className="mt-1 w-full px-2 py-1 text-white rounded text-[9px] font-medium flex items-center justify-start"
+                  >
+                    <span
+                      style={{
+                        display: "inline-block",
+                        transform: expandedCategory === "all" ? "rotate(90deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s",
+                        fontSize: "14px",
+                      }}
+                    >
+                      ▶▶
+                    </span>
+                    <InfoTooltip
+                      text={
+                        language === "GE"
+                          ? "ყველას ჩაშლა / ყველას დახურვა"
+                          : "Collapse all/Hide all"
+                      }
+                    />
+                  </button>
                 </th>
                 <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
@@ -646,13 +680,13 @@ const Page = ({ language }) => {
                       {/* Parent Category Row */}
                       <tr
                         className={`${darkMode ? 'hover:bg-gray-700 bg-gray-800' : 'hover:bg-gray-50 bg-white'} cursor-pointer`}
-                        onClick={() =>
+                        onClick={() => {
                           setExpandedCategory(
                             expandedCategory === category.code
                               ? null
                               : category.code
-                          )
-                        }
+                          );
+                        }}
                       >
                         <td
                           className="border border-gray-300 px-2 py-2"
@@ -784,7 +818,7 @@ const Page = ({ language }) => {
                             className="hover:bg-gray-50 bg-gray-50"
                             style={{
                               display:
-                                expandedCategory === category.code
+                                expandedCategory === category.code || expandedCategory === "all"
                                   ? ""
                                   : "none",
                             }}
