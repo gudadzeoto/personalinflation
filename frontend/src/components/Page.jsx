@@ -30,8 +30,8 @@ const InfoTooltip = ({ text, align = "center" }) => {
 };
 
 const Page = ({ language }) => {
-  const [startDate, setStartDate] = useState(new Date(2024, 11)); // November 2024
-  const [endDate, setEndDate] = useState(new Date(2025, 11)); // November 2025
+  const [startDate, setStartDate] = useState(new Date(2024, 11)); // დეკემბერი 2024
+  const [endDate, setEndDate] = useState(new Date(2025, 11)); // დეკემბერი 2025
   const startDateRef = useRef(null);
   const endDateRef = useRef(null);
   const [dateError, setDateError] = useState("");
