@@ -761,7 +761,7 @@ const Page = ({ language }) => {
       </div>
 
       {/* Table and Chart Section */}
-      <div className="w-full flex flex-col lg:flex-row gap-6 mt-6 px-4">
+      <div className="w-full flex flex-col lg:flex-row gap-6 mt-6">
         {/* Left Side: Expense Categories Table */}
         <div className="w-full lg:w-2/3 overflow-x-auto overflow-y-visible">
           <table className="w-full border-collapse text-[10px]">
@@ -1261,7 +1261,7 @@ const Page = ({ language }) => {
               )}
             </tbody>
           </table>
-          <div className="w-full flex items-center justify-between px-1 py-1 mt-1 mb-1">
+          <div className="w-full flex items-center justify-between px-1 py-1">
             <a
               href="#"
               className="flex items-center gap-2 text-[#01389c] hover:opacity-80 transition"
@@ -1279,7 +1279,7 @@ const Page = ({ language }) => {
         </div>
 
         {/* Right Side: Charts */}
-        <div className="w-full lg:w-1/3 flex flex-col gap-6">
+        <div className="w-full lg:w-1/3 flex flex-col gap-6 pr-4">
           {/* Column Chart */}
           <div
             className={`${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} border rounded p-2`}
