@@ -135,4 +135,18 @@ body.dark .period-select::-ms-expand {
   display: none;
 }
 
+body.dark span,
+body.dark label,
+body.dark h2,
+body.dark h3,
+body.dark td {
+  color: #ffffff !important;
+}
+
+body.dark input[readonly],
+body.dark input:disabled {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
 

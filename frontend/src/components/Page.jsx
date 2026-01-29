@@ -46,6 +46,7 @@ const Page = ({ language }) => {
   const [groupPrices, setGroupPrices] = useState({});
   const [subGroupWeights, setSubGroupWeights] = useState({});
   const [subCategoryPrices, setSubCategoryPrices] = useState({});
+  const [darkMode, setDarkMode] = useState(false);
 
   // Fetch categories from API
   useEffect(() => {
@@ -312,6 +313,11 @@ const Page = ({ language }) => {
     setSubCategoryPrices(prices);
   };
 
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   // Handle start date change
   const handleStartDateChange = (date) => {
     setStartDate(date);
@@ -330,7 +336,7 @@ const Page = ({ language }) => {
 
   return (
     <div
-      className="bg-white shadow-md bpg_mrgvlovani_caps w-full"
+      className={`shadow-md bpg_mrgvlovani_caps w-full ${darkMode ? 'bg-gray-900' : 'bg-white'}`}
       style={{ border: "1px solid #01389c" }}
     >
       {/* Error Modal */}
@@ -371,14 +377,14 @@ const Page = ({ language }) => {
       {/* --- Everything in One Row --- */}
       <div
         className="w-full flex flex-col lg:flex-row justify-center gap-8 lg:gap-16 items-start lg:items-start bpg_mrgvlovani_caps px-4"
-        style={{ color: "#333" }}
+        style={{ color: darkMode ? "#fff" : "#333" }}
       >
         {/* Left Section: Time Period and Results */}
         <div className="flex flex-col">
           {/* --- Title --- */}
           <h2
             className="text-center"
-            style={{ fontWeight: 700, fontSize: "16px", paddingTop: "10px" }}
+            style={{ fontWeight: 700, fontSize: "16px", paddingTop: "10px", color: darkMode ? "#fff !important" : "#333" }}
           >
             {language === "GE" ? "დროის პერიოდი:" : "Time Period:"}
           </h2>
@@ -388,11 +394,12 @@ const Page = ({ language }) => {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-10 justify-center">
             {/* Start Date */}
             <div className="flex flex-col">
-              <label className="mb-1 text-center">
+              <label className="mb-1 text-center" style={{ color: darkMode ? "#fff !important" : "#333" }}>
                 {language === "GE" ? "საწყისი:" : "From:"}
               </label>
 
-              <div className="flex border border-gray-400 rounded-lg overflow-hidden w-full sm:w-56 focus-within:border-blue-800 transition-colors">
+              <div className="flex border border-gray-400 rounded-lg overflow-hidden w-full sm:w-56 focus-within:border-blue-800 transition-colors"
+                style={{ backgroundColor: darkMode ? "#374151" : "#fff" }}>
                 <DatePicker
                   ref={startDateRef}
                   selected={startDate}
@@ -400,6 +407,7 @@ const Page = ({ language }) => {
                   dateFormat="MM/yyyy"
                   showMonthYearPicker
                   className="px-3 py-2 w-full outline-none"
+                  style={{ backgroundColor: darkMode ? "#374151" : "#fff", color: darkMode ? "#fff" : "#333" }}
                 />
 
                 <button
@@ -413,11 +421,12 @@ const Page = ({ language }) => {
 
             {/* End Date */}
             <div className="flex flex-col">
-              <label className="mb-1 text-center">
+              <label className="mb-1 text-center" style={{ color: darkMode ? "#fff !important" : "#333" }}>
                 {language === "GE" ? "საბოლოო:" : "To:"}
               </label>
 
-              <div className="flex border border-gray-400 rounded-lg overflow-hidden w-full sm:w-56 focus-within:border-blue-800 transition-colors">
+              <div className="flex border border-gray-400 rounded-lg overflow-hidden w-full sm:w-56 focus-within:border-blue-800 transition-colors"
+                style={{ backgroundColor: darkMode ? "#374151" : "#fff" }}>
                 <DatePicker
                   ref={endDateRef}
                   selected={endDate}
@@ -425,6 +434,7 @@ const Page = ({ language }) => {
                   dateFormat="MM/yyyy"
                   showMonthYearPicker
                   className="px-3 py-2 w-full outline-none"
+                  style={{ backgroundColor: darkMode ? "#374151" : "#fff", color: darkMode ? "#fff" : "#333" }}
                 />
 
                 <button
@@ -438,7 +448,7 @@ const Page = ({ language }) => {
           </div>
 
           {/* --- Results Title --- */}
-          <h3 className="text-xl font-bold text-center py-2 mt-[-2rem]">
+          <h3 className="text-xl font-bold text-center py-2 mt-[-2rem]" style={{ color: darkMode ? "#fff !important" : "#333" }}>
             {language === "GE" ? "შედეგი:" : "Result:"}
           </h3>
           <div className="w-full border-t border-gray-300 mt-2 mb-2"></div>
@@ -447,7 +457,7 @@ const Page = ({ language }) => {
           <div className="flex flex-col gap-5 items-start">
             {/* Row 1 */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full">
-              <span className="flex-1">
+              <span className="flex-1" style={{ color: darkMode ? "#fff !important" : "#333" }}>
                 {language === "GE"
                   ? `ოფიციალური ინფლაციის მაჩვენებელი ${formatDate(
                       startDate
@@ -461,12 +471,13 @@ const Page = ({ language }) => {
                 className="border border-gray-400 rounded px-3 py-2 w-full sm:w-55 text-right bg-gray-50 focus:border-blue-800 focus:outline-none transition-colors"
                 value={officialInflationRate}
                 readOnly
+                style={{ backgroundColor: darkMode ? "#374151" : "#f3f4f6", color: darkMode ? "#fff" : "#333" }}
               />
             </div>
 
             {/* Row 2 */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full">
-              <span className="flex-1 font-bold">
+              <span className="flex-1 font-bold" style={{ color: darkMode ? "#fff !important" : "#333" }}>
                 {language === "GE"
                   ? `პერსონალური ინფლაციის მაჩვენებელი ${formatDate(
                       startDate
@@ -477,9 +488,10 @@ const Page = ({ language }) => {
               </span>
 
               <input
-                className="border border-gray-400 rounded px-3 py-2 w-full sm:w-55 text-right bg-gray-50 focus:border-blue-800 focus:outline-none transition-colors"
+                className="border border-gray-400 rounded px-3 py-2 w-full sm:w-55 text-right focus:border-blue-800 focus:outline-none transition-colors"
                 value="0%"
                 readOnly
+                style={{ backgroundColor: darkMode ? "#374151" : "#f3f4f6", color: darkMode ? "#fff" : "#333" }}
               />
             </div>
           </div>
@@ -535,7 +547,7 @@ const Page = ({ language }) => {
         {/* Left Side: Expense Categories Table */}
         <div className="w-full lg:w-2/3 overflow-x-auto overflow-y-visible">
           <table className="w-full border-collapse text-[10px]">
-            <thead className="bg-[#01389c] text-white">
+            <thead className={`${darkMode ? 'bg-gray-800' : 'bg-[#01389c]'} text-white`}>
               <tr>
                 <th className="border border-gray-300 px-1 py-1 text-left text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1">
@@ -607,7 +619,7 @@ const Page = ({ language }) => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white text-[10px]">
+            <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'} text-[10px]`}>
               {loading ? (
                 <tr>
                   <td
@@ -623,7 +635,7 @@ const Page = ({ language }) => {
                     <React.Fragment key={category.code}>
                       {/* Parent Category Row */}
                       <tr
-                        className="hover:bg-gray-50 cursor-pointer bg-white"
+                        className={`${darkMode ? 'hover:bg-gray-700 bg-gray-800' : 'hover:bg-gray-50 bg-white'} cursor-pointer`}
                         onClick={() =>
                           setExpandedCategory(
                             expandedCategory === category.code
@@ -634,7 +646,7 @@ const Page = ({ language }) => {
                       >
                         <td
                           className="border border-gray-300 px-2 py-2"
-                          style={{ color: "#333" }}
+                          style={{ color: darkMode ? "#fff" : "#333" }}
                         >
                           <span className="font-medium flex items-center gap-2">
                             <span
@@ -657,7 +669,7 @@ const Page = ({ language }) => {
                         </td>
                         <td
                           className="border border-gray-300 px-2 py-2 text-right"
-                          style={{ color: "#333" }}
+                          style={{ color: darkMode ? "#fff" : "#333" }}
                         >
                           {groupData[`Group${category.code}`] !== undefined
                             ? `${groupData[`Group${category.code}`]}%`
@@ -665,7 +677,7 @@ const Page = ({ language }) => {
                         </td>
                         <td
                           className="border border-gray-300 px-2 py-2 text-right"
-                          style={{ color: "#333" }}
+                          style={{ color: darkMode ? "#fff" : "#333" }}
                           id={`parent-avg-${category.code}`}
                         >
                           {groupPrices[`Group${category.code}`] !== undefined
@@ -678,7 +690,7 @@ const Page = ({ language }) => {
                               type="number"
                               min="0"
                               className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right parent-monthly-${category.code}`}
-                              style={{ color: "#333" }}
+                              style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#514137" : "#fff" }}
                               onClick={(e) => e.stopPropagation()}
                               id={`parent-monthly-${category.code}`}
                               onChange={(e) => {
@@ -716,7 +728,7 @@ const Page = ({ language }) => {
                               type="number"
                               min="0"
                               className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right parent-yearly-${category.code}`}
-                              style={{ color: "#333" }}
+                              style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
                               onClick={(e) => e.stopPropagation()}
                               id={`parent-yearly-${category.code}`}
                               onChange={(e) => {
@@ -769,7 +781,7 @@ const Page = ({ language }) => {
                           >
                             <td
                               className="border border-gray-300 px-2 py-2 pl-8"
-                              style={{ color: "#333" }}
+                              style={{ color: darkMode ? "#fff" : "#333" }}
                             >
                               <span className="text-[9px]">
                                 {language === "GE" ? sub.name_geo : sub.name_en}
@@ -777,7 +789,7 @@ const Page = ({ language }) => {
                             </td>
                             <td
                               className="border border-gray-300 px-2 py-2 text-right"
-                              style={{ color: "#333" }}
+                              style={{ color: darkMode ? "#fff" : "#333" }}
                             >
                               {subGroupData[`grp${category.code}sub${sub.code % 10}`] !== undefined
                                 ? `${subGroupData[`grp${category.code}sub${sub.code % 10}`]}%`
@@ -785,7 +797,7 @@ const Page = ({ language }) => {
                             </td>
                             <td
                               className="border border-gray-300 px-2 py-2 text-right"
-                              style={{ color: "#333" }}
+                              style={{ color: darkMode ? "#fff" : "#333" }}
                             >
                               {subCategoryPrices[`grp${category.code}sub${sub.code % 10}`] !== undefined
                                 ? `${subCategoryPrices[`grp${category.code}sub${sub.code % 10}`].toFixed(2)} ₾`
@@ -797,7 +809,7 @@ const Page = ({ language }) => {
                                   type="number"
                                   min="0"
                                   className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-monthly-${sub.code}`}
-                                  style={{ color: "#333" }}
+                                  style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
                                   onChange={(e) => {
                                     const monthly = parseFloat(e.target.value) || 0;
                                     const yearlyInput = e.target.nextSibling;
@@ -829,7 +841,7 @@ const Page = ({ language }) => {
                                   type="number"
                                   min="0"
                                   className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-yearly-${sub.code}`}
-                                  style={{ color: "#333" }}
+                                  style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
                                   onChange={(e) => {
                                     const yearly = parseFloat(e.target.value) || 0;
                                     const monthlyInput = e.target.previousSibling;
@@ -865,14 +877,15 @@ const Page = ({ language }) => {
                   ))}
 
                   {/* Total Row */}
-                  <tr className="bg-[#01389c] text-white font-bold">
-                    <td className="border border-gray-300 px-2 py-2">
+                  <tr className={`${darkMode ? 'bg-gray-700' : 'bg-[#01389c]'} text-white font-bold`}>
+                    <td className="border border-gray-300 px-2 py-2" style={{ color: "white" }}>
                       {language === "GE" ? "სულ" : "Total"}
                     </td>
                     <td className="border border-gray-300 px-2 py-2"></td>
                     <td
                       className="border border-gray-300 px-2 py-2 text-right"
                       id="total-avg"
+                      style={{ color: "white" }}
                     >
                       {getTotalGroupPrices().toFixed(2)} ₾
                     </td>
@@ -882,16 +895,16 @@ const Page = ({ language }) => {
                           type="text"
                           value={totalMonthlySum.toFixed(2)}
                           readOnly
-                          className="border border-gray-400 rounded px-2 py-1 w-27 text-right bg-white total-monthly"
-                          style={{ color: "#333" }}
+                          className="border border-gray-400 rounded px-2 py-1 w-27 text-right total-monthly"
+                          style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
                           id="total-monthly"
                         />
                         <input
                           type="text"
                           value={totalYearlySum.toFixed(2)}
                           readOnly
-                          className="border border-gray-400 rounded px-2 py-1 w-27 text-right bg-white total-yearly"
-                          style={{ color: "#333" }}
+                          className="border border-gray-400 rounded px-2 py-1 w-27 text-right total-yearly"
+                          style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
                           id="total-yearly"
                         />
                       </div>
@@ -921,7 +934,7 @@ const Page = ({ language }) => {
         {/* Right Side: Charts */}
         <div className="w-full lg:w-1/3 flex flex-col gap-6">
           {/* Column Chart */}
-          <div className="bg-white border border-gray-300 rounded p-2">
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} border rounded p-2`}>
             <HighchartsReact
               highcharts={Highcharts}
               options={{
@@ -1018,7 +1031,7 @@ const Page = ({ language }) => {
           </div>
 
           {/* Line Chart */}
-          <div className="bg-white border border-gray-300 rounded p-2">
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} border rounded p-2`}>
             <HighchartsReact
               highcharts={Highcharts}
               options={{
