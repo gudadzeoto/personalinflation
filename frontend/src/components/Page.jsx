@@ -568,7 +568,7 @@ const Page = ({ language }) => {
           <table className="w-full border-collapse text-[10px]">
             <thead className={`${darkMode ? 'bg-gray-800' : 'bg-[#01389c]'} text-white`}>
               <tr>
-                <th className="border border-gray-300 px-1 py-1 text-left text-[10px] font-bold text-white">
+                <th className="px-1 py-1 text-left text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1">
                     <span>
                       {language === "GE" ? "ჯგუფის დასახელება" : "Group Name"}
@@ -608,7 +608,7 @@ const Page = ({ language }) => {
                     />
                   </button>
                 </th>
-                <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
+                <th className="px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
                     <span>
                       {language === "GE"
@@ -624,7 +624,7 @@ const Page = ({ language }) => {
                     />
                   </div>
                 </th>
-                <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
+                <th className="px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
                     <span>
                       {language === "GE"
@@ -640,7 +640,7 @@ const Page = ({ language }) => {
                     />
                   </div>
                 </th>
-                <th className="border border-gray-300 px-1 py-1 text-center text-[10px] font-bold text-white">
+                <th className="px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
                     <span>
                       {language === "GE"
@@ -668,7 +668,7 @@ const Page = ({ language }) => {
                 <tr>
                   <td
                     colSpan="4"
-                    className="border border-gray-300 px-2 py-4 text-center"
+                    className="px-2 py-4 text-center"
                   >
                     {language === "GE" ? "იტვირთება..." : "Loading..."}
                   </td>
@@ -689,7 +689,7 @@ const Page = ({ language }) => {
                         }}
                       >
                         <td
-                          className="border border-gray-300 px-2 py-2"
+                          className="px-2 py-2"
                           style={{ color: darkMode ? "#fff" : "#333" }}
                         >
                           <span className="font-medium flex items-center gap-2">
@@ -712,7 +712,7 @@ const Page = ({ language }) => {
                           </span>
                         </td>
                         <td
-                          className="border border-gray-300 px-2 py-2 text-right"
+                          className="px-2 py-2 text-right"
                           style={{ color: darkMode ? "#fff" : "#333" }}
                         >
                           {groupData[`Group${category.code}`] !== undefined
@@ -720,7 +720,7 @@ const Page = ({ language }) => {
                             : "0%"}
                         </td>
                         <td
-                          className="border border-gray-300 px-2 py-2 text-right"
+                          className="px-2 py-2 text-right"
                           style={{ color: darkMode ? "#fff" : "#333" }}
                           id={`parent-avg-${category.code}`}
                         >
@@ -728,7 +728,7 @@ const Page = ({ language }) => {
                             ? `${parseFloat(groupPrices[`Group${category.code}`]).toFixed(2)} ₾`
                             : "0 ₾"}
                         </td>
-                        <td className="border border-gray-300 px-2 py-2">
+                        <td className="px-2 py-2">
                           <div className="flex gap-2">
                             <input
                               type="number"
@@ -824,7 +824,7 @@ const Page = ({ language }) => {
                             }}
                           >
                             <td
-                              className="border border-gray-300 px-2 py-2 pl-8"
+                              className="px-2 py-2 pl-8"
                               style={{ color: darkMode ? "#fff" : "#333" }}
                             >
                               <span className="text-[9px]">
@@ -832,7 +832,7 @@ const Page = ({ language }) => {
                               </span>
                             </td>
                             <td
-                              className="border border-gray-300 px-2 py-2 text-right"
+                              className="px-2 py-2 text-right"
                               style={{ color: darkMode ? "#fff" : "#333" }}
                             >
                               {subGroupData[`grp${category.code}sub${sub.code % 10}`] !== undefined
@@ -840,14 +840,14 @@ const Page = ({ language }) => {
                                 : "0%"}
                             </td>
                             <td
-                              className="border border-gray-300 px-2 py-2 text-right"
+                              className="px-2 py-2 text-right"
                               style={{ color: darkMode ? "#fff" : "#333" }}
                             >
                               {subCategoryPrices[`grp${category.code}sub${sub.code % 10}`] !== undefined
                                 ? `${subCategoryPrices[`grp${category.code}sub${sub.code % 10}`].toFixed(2)} ₾`
                                 : "0 ₾"}
                             </td>
-                            <td className="border border-gray-300 px-2 py-2">
+                            <td className="px-2 py-2">
                               <div className="flex gap-2">
                                 <input
                                   type="number"
@@ -922,18 +922,18 @@ const Page = ({ language }) => {
 
                   {/* Total Row */}
                   <tr className={`${darkMode ? 'bg-gray-700' : 'bg-[#01389c]'} text-white font-bold`}>
-                    <td className="border border-gray-300 px-2 py-2" style={{ color: "white" }}>
+                    <td className="px-2 py-2" style={{ color: "white" }}>
                       {language === "GE" ? "სულ" : "Total"}
                     </td>
-                    <td className="border border-gray-300 px-2 py-2"></td>
+                    <td className="px-2 py-2"></td>
                     <td
-                      className="border border-gray-300 px-2 py-2 text-right"
+                      className="px-2 py-2 text-right"
                       id="total-avg"
                       style={{ color: "white" }}
                     >
                       {getTotalGroupPrices().toFixed(2)} ₾
                     </td>
-                    <td className="border border-gray-300 px-2 py-2">
+                    <td className="px-2 py-2">
                       <div className="flex gap-2">
                         <input
                           type="text"
