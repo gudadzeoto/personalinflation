@@ -14,8 +14,8 @@ const InfoTooltip = ({ text, align = "center" }) => {
     align === "left"
       ? "left-0"
       : align === "right"
-      ? "right-0"
-      : "left-1/2 -translate-x-1/2";
+        ? "right-0"
+        : "left-1/2 -translate-x-1/2";
 
   return (
     <span className="relative inline-flex group" tabIndex={0} aria-label={text}>
@@ -50,6 +50,11 @@ const Page = ({ language }) => {
   const [darkMode, setDarkMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [personalInflationRate, setPersonalInflationRate] = useState("0%");
+  const [monthlyChartData, setMonthlyChartData] = useState({
+    categories: [],
+    personalData: [],
+    officialData: [],
+  });
 
   // Fetch categories from API
   useEffect(() => {
@@ -101,7 +106,10 @@ const Page = ({ language }) => {
 
   // Recalculate subcategory prices whenever groupPrices or subGroupWeights change
   useEffect(() => {
-    if (Object.keys(groupPrices).length > 0 && Object.keys(subGroupWeights).length > 0) {
+    if (
+      Object.keys(groupPrices).length > 0 &&
+      Object.keys(subGroupWeights).length > 0
+    ) {
       calculateSubCategoryPrices(groupPrices, subGroupWeights);
     }
   }, [groupPrices, subGroupWeights]);
@@ -118,13 +126,136 @@ const Page = ({ language }) => {
     return `${year}/${month}`;
   };
 
+  // Fetch monthly inflation data for the chart
+  const fetchMonthlyChartData = async (fromDate, toDate) => {
+    try {
+      const categories = [];
+      const personalDataPoints = [];
+      const officialDataPoints = [];
+
+      const startYear = fromDate.getFullYear();
+      const startMonth = fromDate.getMonth();
+      const endYear = toDate.getFullYear();
+      const endMonth = toDate.getMonth();
+
+      let currentYear = startYear;
+      let currentMonth = startMonth;
+
+      while (
+        currentYear < endYear ||
+        (currentYear === endYear && currentMonth <= endMonth)
+      ) {
+        const monthStr = String(currentMonth + 1).padStart(2, "0");
+        const currentDate = new Date(currentYear, currentMonth);
+        const monthLabel = `${currentYear}/${monthStr}`;
+        categories.push(monthLabel);
+
+        // Fetch data for year-over-year comparison (same month last year to same month this year)
+        const lastYearDate = new Date(currentYear - 1, currentMonth);
+        const lastYearMonthStr = String(lastYearDate.getMonth() + 1).padStart(
+          2,
+          "0",
+        );
+        const lastYearLabel = `${lastYearDate.getFullYear()}/${lastYearMonthStr}`;
+
+        try {
+          // Fetch official and group inflation for this month (year-over-year)
+          const response = await fetch(
+            `http://localhost:5000/api/infogroups?from=${lastYearLabel}&to=${monthLabel}`,
+          );
+          const data = await response.json();
+
+          if (data && data.length > 0) {
+            const startValue = data[0].GroupTotal;
+            const endValue = data[data.length - 1].GroupTotal;
+
+            if (startValue && endValue) {
+              const inflationRate = (endValue / startValue) * 100 - 100;
+              officialDataPoints.push(parseFloat(inflationRate.toFixed(1)));
+            } else {
+              officialDataPoints.push(0);
+            }
+
+            // Calculate personal inflation for this month using current user spending allocation
+            let monthlyPersonalInflation = 0;
+            const groupKeys = Object.keys(data[0]).filter((key) =>
+              key.match(/^Group\d+$/),
+            );
+
+            groupKeys.forEach((groupKey) => {
+              const startGroupValue = data[0][groupKey];
+              const endGroupValue = data[data.length - 1][groupKey];
+
+              if (startGroupValue && endGroupValue) {
+                const groupInflationRate =
+                  (endGroupValue / startGroupValue) * 100 - 100;
+
+                // Get the category code from the group key (e.g., "Group1" -> code "1")
+                const categoryCode = groupKey.replace("Group", "");
+
+                // Find the parent monthly value for this category
+                const parentMonthlyInput = document.querySelector(
+                  `#parent-monthly-${categoryCode}`,
+                );
+                const parentMonthlyValue =
+                  parseFloat(parentMonthlyInput?.value) || 0;
+
+                // Get total monthly sum
+                const totalMonthlyInput =
+                  document.querySelector("#total-monthly");
+                const totalMonthly = parseFloat(totalMonthlyInput?.value) || 0;
+
+                // Calculate weighted contribution
+                if (totalMonthly > 0) {
+                  const weight =
+                    (parentMonthlyValue / totalMonthly) * groupInflationRate;
+                  monthlyPersonalInflation += weight;
+                }
+              }
+            });
+
+            personalDataPoints.push(
+              parseFloat(monthlyPersonalInflation.toFixed(1)),
+            );
+          } else {
+            officialDataPoints.push(0);
+            personalDataPoints.push(0);
+          }
+        } catch (error) {
+          console.error(`Error fetching data for ${monthLabel}:`, error);
+          officialDataPoints.push(0);
+          personalDataPoints.push(0);
+        }
+
+        currentMonth++;
+        if (currentMonth > 11) {
+          currentMonth = 0;
+          currentYear++;
+        }
+      }
+
+      setMonthlyChartData({
+        categories,
+        personalData: personalDataPoints,
+        officialData: officialDataPoints,
+      });
+    } catch (error) {
+      console.error("Error fetching monthly chart data:", error);
+    }
+  };
+
+  // Update monthly chart data when dates or spending values change
+  useEffect(() => {
+    fetchMonthlyChartData(startDate, endDate);
+  }, [startDate, endDate, totalMonthlySum]);
+
   // Validate dates whenever they change
   useEffect(() => {
     if (startDate && endDate && endDate < startDate) {
       setDateError(
         language === "GE"
           ? "საბოლოო პერიოდი უნდა აღემატებოდეს საწყის პერიოდს."
-          : "The end period must exceed the start period."
+          : "The end period must exceed the start period.",
       );
     } else {
       setDateError("");
@@ -172,7 +303,7 @@ const Page = ({ language }) => {
   const fetchInfoGroups = async (fromDate, toDate) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/infogroups?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`
+        `http://localhost:5000/api/infogroups?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
       );
       const data = await response.json();
 
@@ -190,7 +321,7 @@ const Page = ({ language }) => {
         // Calculate inflation rates for each group (Group1, Group2, Group3, etc.)
         const groupCalculations = {};
         const groupKeys = Object.keys(data[0]).filter((key) =>
-          key.match(/^Group\d+$/)
+          key.match(/^Group\d+$/),
         );
 
         groupKeys.forEach((groupKey) => {
@@ -206,7 +337,6 @@ const Page = ({ language }) => {
 
         setGroupData(groupCalculations);
       }
-
     } catch (error) {
       console.error("Error fetching info groups:", error);
     }
@@ -216,7 +346,7 @@ const Page = ({ language }) => {
   const fetchSubGroupIndex = async (fromDate, toDate) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/subgroupindex?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`
+        `http://localhost:5000/api/subgroupindex?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
       );
       const data = await response.json();
 
@@ -224,7 +354,7 @@ const Page = ({ language }) => {
       if (data && data.length > 0) {
         const subGroupCalculations = {};
         const subGroupKeys = Object.keys(data[0]).filter((key) =>
-          key.match(/^grp\d+sub\d+$/i)
+          key.match(/^grp\d+sub\d+$/i),
         );
 
         subGroupKeys.forEach((subGroupKey) => {
@@ -234,13 +364,13 @@ const Page = ({ language }) => {
           if (startSubGroupValue && endSubGroupValue) {
             const subGroupInflationRate =
               (endSubGroupValue / startSubGroupValue) * 100 - 100;
-            subGroupCalculations[subGroupKey] = subGroupInflationRate.toFixed(2);
+            subGroupCalculations[subGroupKey] =
+              subGroupInflationRate.toFixed(2);
           }
         });
 
         setSubGroupData(subGroupCalculations);
       }
-
     } catch (error) {
       console.error("Error fetching subgroup index:", error);
     }
@@ -250,7 +380,7 @@ const Page = ({ language }) => {
   const fetchGroupPrices = async (year) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/groupprices?year=${year}`
+        `http://localhost:5000/api/groupprices?year=${year}`,
       );
       const data = await response.json();
 
@@ -258,7 +388,7 @@ const Page = ({ language }) => {
       if (data && data.length > 0) {
         const groupPricesMap = {};
         const groupPriceKeys = Object.keys(data[0]).filter((key) =>
-          key.match(/^Group\d+$/)
+          key.match(/^Group\d+$/),
         );
 
         groupPriceKeys.forEach((groupKey) => {
@@ -267,7 +397,6 @@ const Page = ({ language }) => {
 
         setGroupPrices(groupPricesMap);
       }
-
     } catch (error) {
       console.error("Error fetching group prices:", error);
     }
@@ -277,7 +406,7 @@ const Page = ({ language }) => {
   const fetchSubGroupWeights = async (year) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/subgroupweights?year=${year}`
+        `http://localhost:5000/api/subgroupweights?year=${year}`,
       );
       const data = await response.json();
 
@@ -285,7 +414,7 @@ const Page = ({ language }) => {
       if (data && data.length > 0) {
         const subGroupWeightsMap = {};
         const subGroupWeightKeys = Object.keys(data[0]).filter((key) =>
-          key.match(/^grp\d+sub\d+$/i)
+          key.match(/^grp\d+sub\d+$/i),
         );
 
         subGroupWeightKeys.forEach((weightKey) => {
@@ -323,7 +452,7 @@ const Page = ({ language }) => {
 
   // Calculate personal inflation rate
   const calculatePersonalInflationRate = () => {
-    const totalMonthlyInput = document.querySelector('#total-monthly');
+    const totalMonthlyInput = document.querySelector("#total-monthly");
     const totalMonthly = parseFloat(totalMonthlyInput?.value) || 0;
 
     if (totalMonthly === 0) {
@@ -333,7 +462,9 @@ const Page = ({ language }) => {
     let weightedInflationSum = 0;
 
     categories.forEach((category) => {
-      const parentMonthlyInput = document.querySelector(`#parent-monthly-${category.code}`);
+      const parentMonthlyInput = document.querySelector(
+        `#parent-monthly-${category.code}`,
+      );
       const parentMonthlyValue = parseFloat(parentMonthlyInput?.value) || 0;
       const inflationRate = parseFloat(groupData[`Group${category.code}`]) || 0;
 
@@ -379,7 +510,7 @@ const Page = ({ language }) => {
 
   return (
     <div
-      className={`shadow-md bpg_mrgvlovani_caps w-full ${darkMode ? 'bg-gray-900' : 'bg-white'}`}
+      className={`shadow-md bpg_mrgvlovani_caps w-full ${darkMode ? "bg-gray-900" : "bg-white"}`}
       style={{ border: "1px solid #01389c" }}
     >
       {/* Error Modal */}
@@ -435,7 +566,12 @@ const Page = ({ language }) => {
           {/* --- Title --- */}
           <h2
             className="text-center"
-            style={{ fontWeight: 700, fontSize: "16px", paddingTop: "10px", color: darkMode ? "#fff !important" : "#333" }}
+            style={{
+              fontWeight: 700,
+              fontSize: "16px",
+              paddingTop: "10px",
+              color: darkMode ? "#fff !important" : "#333",
+            }}
           >
             {language === "GE" ? "დროის პერიოდი:" : "Time Period:"}
           </h2>
@@ -445,12 +581,17 @@ const Page = ({ language }) => {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-10 justify-center">
             {/* Start Date */}
             <div className="flex flex-col">
-              <label className="mb-1 text-center" style={{ color: darkMode ? "#fff !important" : "#333" }}>
+              <label
+                className="mb-1 text-center"
+                style={{ color: darkMode ? "#fff !important" : "#333" }}
+              >
                 {language === "GE" ? "საწყისი:" : "From:"}
               </label>
 
-              <div className="flex border border-gray-400 rounded-lg overflow-hidden w-full sm:w-56 focus-within:border-blue-800 transition-colors"
-                style={{ backgroundColor: darkMode ? "#374151" : "#fff" }}>
+              <div
+                className="flex border border-gray-400 rounded-lg overflow-hidden w-full sm:w-56 focus-within:border-blue-800 transition-colors"
+                style={{ backgroundColor: darkMode ? "#374151" : "#fff" }}
+              >
                 <DatePicker
                   ref={startDateRef}
                   selected={startDate}
@@ -458,7 +599,10 @@ const Page = ({ language }) => {
                   dateFormat="MM/yyyy"
                   showMonthYearPicker
                   className="px-3 py-2 w-full outline-none"
-                  style={{ backgroundColor: darkMode ? "#374151" : "#fff", color: darkMode ? "#fff" : "#333" }}
+                  style={{
+                    backgroundColor: darkMode ? "#374151" : "#fff",
+                    color: darkMode ? "#fff" : "#333",
+                  }}
                 />
 
                 <button
@@ -472,12 +616,17 @@ const Page = ({ language }) => {
 
             {/* End Date */}
             <div className="flex flex-col">
-              <label className="mb-1 text-center" style={{ color: darkMode ? "#fff !important" : "#333" }}>
+              <label
+                className="mb-1 text-center"
+                style={{ color: darkMode ? "#fff !important" : "#333" }}
+              >
                 {language === "GE" ? "საბოლოო:" : "To:"}
               </label>
 
-              <div className="flex border border-gray-400 rounded-lg overflow-hidden w-full sm:w-56 focus-within:border-blue-800 transition-colors"
-                style={{ backgroundColor: darkMode ? "#374151" : "#fff" }}>
+              <div
+                className="flex border border-gray-400 rounded-lg overflow-hidden w-full sm:w-56 focus-within:border-blue-800 transition-colors"
+                style={{ backgroundColor: darkMode ? "#374151" : "#fff" }}
+              >
                 <DatePicker
                   ref={endDateRef}
                   selected={endDate}
@@ -485,7 +634,10 @@ const Page = ({ language }) => {
                   dateFormat="MM/yyyy"
                   showMonthYearPicker
                   className="px-3 py-2 w-full outline-none"
-                  style={{ backgroundColor: darkMode ? "#374151" : "#fff", color: darkMode ? "#fff" : "#333" }}
+                  style={{
+                    backgroundColor: darkMode ? "#374151" : "#fff",
+                    color: darkMode ? "#fff" : "#333",
+                  }}
                 />
 
                 <button
@@ -499,7 +651,10 @@ const Page = ({ language }) => {
           </div>
 
           {/* --- Results Title --- */}
-          <h3 className="text-xl font-bold text-center py-2 mt-[-2rem]" style={{ color: darkMode ? "#fff !important" : "#333" }}>
+          <h3
+            className="text-xl font-bold text-center py-2 mt-[-2rem]"
+            style={{ color: darkMode ? "#fff !important" : "#333" }}
+          >
             {language === "GE" ? "შედეგი:" : "Result:"}
           </h3>
           <div className="w-full border-t border-gray-300 mt-2 mb-2"></div>
@@ -508,13 +663,16 @@ const Page = ({ language }) => {
           <div className="flex flex-col gap-5 items-start">
             {/* Row 1 */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full">
-              <span className="flex-1" style={{ color: darkMode ? "#fff !important" : "#333" }}>
+              <span
+                className="flex-1"
+                style={{ color: darkMode ? "#fff !important" : "#333" }}
+              >
                 {language === "GE"
                   ? `ოფიციალური ინფლაციის მაჩვენებელი ${formatDate(
-                      startDate
+                      startDate,
                     )} -დან ${formatDate(endDate)}`
                   : `Official inflation rate from ${formatDate(
-                      startDate
+                      startDate,
                     )} to ${formatDate(endDate)}`}
               </span>
 
@@ -522,19 +680,25 @@ const Page = ({ language }) => {
                 className="border border-gray-400 rounded px-3 py-2 w-full sm:w-55 text-right bg-gray-50 focus:border-blue-800 focus:outline-none transition-colors"
                 value={officialInflationRate}
                 readOnly
-                style={{ backgroundColor: darkMode ? "#374151" : "#f3f4f6", color: darkMode ? "#fff" : "#333" }}
+                style={{
+                  backgroundColor: darkMode ? "#374151" : "#f3f4f6",
+                  color: darkMode ? "#fff" : "#333",
+                }}
               />
             </div>
 
             {/* Row 2 */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full">
-              <span className="flex-1 font-bold" style={{ color: darkMode ? "#fff !important" : "#333" }}>
+              <span
+                className="flex-1 font-bold"
+                style={{ color: darkMode ? "#fff !important" : "#333" }}
+              >
                 {language === "GE"
                   ? `პერსონალური ინფლაციის მაჩვენებელი ${formatDate(
-                      startDate
+                      startDate,
                     )} -დან ${formatDate(endDate)}`
                   : `Personal inflation rate from ${formatDate(
-                      startDate
+                      startDate,
                     )} to ${formatDate(endDate)}`}
               </span>
 
@@ -542,7 +706,10 @@ const Page = ({ language }) => {
                 className="border border-gray-400 rounded px-3 py-2 w-full sm:w-55 text-right focus:border-blue-800 focus:outline-none transition-colors"
                 value={personalInflationRate}
                 readOnly
-                style={{ backgroundColor: darkMode ? "#374151" : "#f3f4f6", color: darkMode ? "#fff" : "#333" }}
+                style={{
+                  backgroundColor: darkMode ? "#374151" : "#f3f4f6",
+                  color: darkMode ? "#fff" : "#333",
+                }}
               />
             </div>
           </div>
@@ -598,7 +765,9 @@ const Page = ({ language }) => {
         {/* Left Side: Expense Categories Table */}
         <div className="w-full lg:w-2/3 overflow-x-auto overflow-y-visible">
           <table className="w-full border-collapse text-[10px]">
-            <thead className={`${darkMode ? 'bg-gray-800' : 'bg-[#01389c]'} text-white`}>
+            <thead
+              className={`${darkMode ? "bg-gray-800" : "bg-[#01389c]"} text-white`}
+            >
               <tr>
                 <th className="px-1 py-1 text-left text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1">
@@ -624,7 +793,10 @@ const Page = ({ language }) => {
                     <span
                       style={{
                         display: "inline-block",
-                        transform: expandedCategory === "all" ? "rotate(90deg)" : "rotate(0deg)",
+                        transform:
+                          expandedCategory === "all"
+                            ? "rotate(90deg)"
+                            : "rotate(0deg)",
                         transition: "transform 0.2s",
                         fontSize: "14px",
                       }}
@@ -695,13 +867,12 @@ const Page = ({ language }) => {
                 </th>
               </tr>
             </thead>
-            <tbody className={`${darkMode ? 'bg-gray-800' : 'bg-white'} text-[10px]`}>
+            <tbody
+              className={`${darkMode ? "bg-gray-800" : "bg-white"} text-[10px]`}
+            >
               {loading ? (
                 <tr>
-                  <td
-                    colSpan="4"
-                    className="px-2 py-4 text-center"
-                  >
+                  <td colSpan="4" className="px-2 py-4 text-center">
                     {language === "GE" ? "იტვირთება..." : "Loading..."}
                   </td>
                 </tr>
@@ -711,12 +882,12 @@ const Page = ({ language }) => {
                     <React.Fragment key={category.code}>
                       {/* Parent Category Row */}
                       <tr
-                        className={`${darkMode ? 'hover:bg-gray-700 bg-gray-800' : 'hover:bg-gray-50 bg-white'} cursor-pointer`}
+                        className={`${darkMode ? "hover:bg-gray-700 bg-gray-800" : "hover:bg-gray-50 bg-white"} cursor-pointer`}
                         onClick={() => {
                           setExpandedCategory(
                             expandedCategory === category.code
                               ? null
-                              : category.code
+                              : category.code,
                           );
                         }}
                       >
@@ -766,7 +937,10 @@ const Page = ({ language }) => {
                               type="number"
                               min="0"
                               className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right parent-monthly-${category.code}`}
-                              style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#514137" : "#fff" }}
+                              style={{
+                                color: darkMode ? "#fff" : "#333",
+                                backgroundColor: darkMode ? "#514137" : "#fff",
+                              }}
                               onClick={(e) => e.stopPropagation()}
                               id={`parent-monthly-${category.code}`}
                               onChange={(e) => {
@@ -779,33 +953,47 @@ const Page = ({ language }) => {
                                 if (category.subcategories) {
                                   category.subcategories.forEach((sub) => {
                                     const weightKey = `grp${category.code}sub${sub.code % 10}`;
-                                    const weight = subGroupWeights[weightKey] || 1;
+                                    const weight =
+                                      subGroupWeights[weightKey] || 1;
                                     const subMonthlyValue = monthly * weight;
                                     const subYearlyValue = subMonthlyValue * 12;
 
                                     // Update subcategory monthly input
-                                    const subMonthlyInput = document.querySelector(`.sub-monthly-${sub.code}`);
+                                    const subMonthlyInput =
+                                      document.querySelector(
+                                        `.sub-monthly-${sub.code}`,
+                                      );
                                     if (subMonthlyInput) {
-                                      subMonthlyInput.value = subMonthlyValue.toFixed(2);
+                                      subMonthlyInput.value =
+                                        subMonthlyValue.toFixed(2);
                                     }
 
                                     // Update subcategory yearly input
-                                    const subYearlyInput = document.querySelector(`.sub-yearly-${sub.code}`);
+                                    const subYearlyInput =
+                                      document.querySelector(
+                                        `.sub-yearly-${sub.code}`,
+                                      );
                                     if (subYearlyInput) {
-                                      subYearlyInput.value = subYearlyValue.toFixed(2);
+                                      subYearlyInput.value =
+                                        subYearlyValue.toFixed(2);
                                     }
                                   });
                                 }
 
                                 updateTotal();
-                                setPersonalInflationRate(calculatePersonalInflationRate());
+                                setPersonalInflationRate(
+                                  calculatePersonalInflationRate(),
+                                );
                               }}
                             />
                             <input
                               type="number"
                               min="0"
                               className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right parent-yearly-${category.code}`}
-                              style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
+                              style={{
+                                color: darkMode ? "#fff" : "#333",
+                                backgroundColor: darkMode ? "#374151" : "#fff",
+                              }}
                               onClick={(e) => e.stopPropagation()}
                               id={`parent-yearly-${category.code}`}
                               onChange={(e) => {
@@ -818,26 +1006,37 @@ const Page = ({ language }) => {
                                 if (category.subcategories) {
                                   category.subcategories.forEach((sub) => {
                                     const weightKey = `grp${category.code}sub${sub.code % 10}`;
-                                    const weight = subGroupWeights[weightKey] || 1;
+                                    const weight =
+                                      subGroupWeights[weightKey] || 1;
                                     const subYearlyValue = yearly * weight;
                                     const subMonthlyValue = subYearlyValue / 12;
 
                                     // Update subcategory monthly input
-                                    const subMonthlyInput = document.querySelector(`.sub-monthly-${sub.code}`);
+                                    const subMonthlyInput =
+                                      document.querySelector(
+                                        `.sub-monthly-${sub.code}`,
+                                      );
                                     if (subMonthlyInput) {
-                                      subMonthlyInput.value = subMonthlyValue.toFixed(2);
+                                      subMonthlyInput.value =
+                                        subMonthlyValue.toFixed(2);
                                     }
 
                                     // Update subcategory yearly input
-                                    const subYearlyInput = document.querySelector(`.sub-yearly-${sub.code}`);
+                                    const subYearlyInput =
+                                      document.querySelector(
+                                        `.sub-yearly-${sub.code}`,
+                                      );
                                     if (subYearlyInput) {
-                                      subYearlyInput.value = subYearlyValue.toFixed(2);
+                                      subYearlyInput.value =
+                                        subYearlyValue.toFixed(2);
                                     }
                                   });
                                 }
 
                                 updateTotal();
-                                setPersonalInflationRate(calculatePersonalInflationRate());
+                                setPersonalInflationRate(
+                                  calculatePersonalInflationRate(),
+                                );
                               }}
                             />
                           </div>
@@ -852,7 +1051,8 @@ const Page = ({ language }) => {
                             className="hover:bg-gray-50 bg-gray-50"
                             style={{
                               display:
-                                expandedCategory === category.code || expandedCategory === "all"
+                                expandedCategory === category.code ||
+                                expandedCategory === "all"
                                   ? ""
                                   : "none",
                             }}
@@ -869,7 +1069,9 @@ const Page = ({ language }) => {
                               className="px-2 py-2 text-right"
                               style={{ color: darkMode ? "#fff" : "#333" }}
                             >
-                              {subGroupData[`grp${category.code}sub${sub.code % 10}`] !== undefined
+                              {subGroupData[
+                                `grp${category.code}sub${sub.code % 10}`
+                              ] !== undefined
                                 ? `${subGroupData[`grp${category.code}sub${sub.code % 10}`]}%`
                                 : "0%"}
                             </td>
@@ -877,7 +1079,9 @@ const Page = ({ language }) => {
                               className="px-2 py-2 text-right"
                               style={{ color: darkMode ? "#fff" : "#333" }}
                             >
-                              {subCategoryPrices[`grp${category.code}sub${sub.code % 10}`] !== undefined
+                              {subCategoryPrices[
+                                `grp${category.code}sub${sub.code % 10}`
+                              ] !== undefined
                                 ? `${subCategoryPrices[`grp${category.code}sub${sub.code % 10}`].toFixed(2)} ₾`
                                 : "0 ₾"}
                             </td>
@@ -887,66 +1091,121 @@ const Page = ({ language }) => {
                                   type="number"
                                   min="0"
                                   className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-monthly-${sub.code}`}
-                                  style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
+                                  style={{
+                                    color: darkMode ? "#fff" : "#333",
+                                    backgroundColor: darkMode
+                                      ? "#374151"
+                                      : "#fff",
+                                  }}
                                   onChange={(e) => {
-                                    const monthly = parseFloat(e.target.value) || 0;
+                                    const monthly =
+                                      parseFloat(e.target.value) || 0;
                                     const yearlyInput = e.target.nextSibling;
                                     if (yearlyInput)
-                                      yearlyInput.value = (monthly * 12).toFixed(2);
+                                      yearlyInput.value = (
+                                        monthly * 12
+                                      ).toFixed(2);
 
                                     // Update parent monthly value to sum of all subcategory monthly values
-                                    const parentMonthlyInput = document.querySelector(`#parent-monthly-${category.code}`);
-                                    if (parentMonthlyInput && category.subcategories) {
+                                    const parentMonthlyInput =
+                                      document.querySelector(
+                                        `#parent-monthly-${category.code}`,
+                                      );
+                                    if (
+                                      parentMonthlyInput &&
+                                      category.subcategories
+                                    ) {
                                       let totalMonthly = 0;
                                       category.subcategories.forEach((sub) => {
-                                        const subMonthlyInput = document.querySelector(`.sub-monthly-${sub.code}`);
+                                        const subMonthlyInput =
+                                          document.querySelector(
+                                            `.sub-monthly-${sub.code}`,
+                                          );
                                         if (subMonthlyInput) {
-                                          totalMonthly += parseFloat(subMonthlyInput.value) || 0;
+                                          totalMonthly +=
+                                            parseFloat(subMonthlyInput.value) ||
+                                            0;
                                         }
                                       });
-                                      parentMonthlyInput.value = totalMonthly.toFixed(2);
+                                      parentMonthlyInput.value =
+                                        totalMonthly.toFixed(2);
 
                                       // Also update parent yearly
-                                      const parentYearlyInput = document.querySelector(`#parent-yearly-${category.code}`);
+                                      const parentYearlyInput =
+                                        document.querySelector(
+                                          `#parent-yearly-${category.code}`,
+                                        );
                                       if (parentYearlyInput) {
-                                        parentYearlyInput.value = (totalMonthly * 12).toFixed(2);
+                                        parentYearlyInput.value = (
+                                          totalMonthly * 12
+                                        ).toFixed(2);
                                       }
                                     }
                                     updateTotal();
-                                    setPersonalInflationRate(calculatePersonalInflationRate());
+                                    setPersonalInflationRate(
+                                      calculatePersonalInflationRate(),
+                                    );
                                   }}
                                 />
                                 <input
                                   type="number"
                                   min="0"
                                   className={`border border-gray-400 rounded px-2 py-1 w-1/2 text-right text-[9px] sub-yearly-${sub.code}`}
-                                  style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
+                                  style={{
+                                    color: darkMode ? "#fff" : "#333",
+                                    backgroundColor: darkMode
+                                      ? "#374151"
+                                      : "#fff",
+                                  }}
                                   onChange={(e) => {
-                                    const yearly = parseFloat(e.target.value) || 0;
-                                    const monthlyInput = e.target.previousSibling;
+                                    const yearly =
+                                      parseFloat(e.target.value) || 0;
+                                    const monthlyInput =
+                                      e.target.previousSibling;
                                     if (monthlyInput)
-                                      monthlyInput.value = (yearly / 12).toFixed(2);
+                                      monthlyInput.value = (
+                                        yearly / 12
+                                      ).toFixed(2);
 
                                     // Update parent yearly value to sum of all subcategory yearly values
-                                    const parentYearlyInput = document.querySelector(`#parent-yearly-${category.code}`);
-                                    if (parentYearlyInput && category.subcategories) {
+                                    const parentYearlyInput =
+                                      document.querySelector(
+                                        `#parent-yearly-${category.code}`,
+                                      );
+                                    if (
+                                      parentYearlyInput &&
+                                      category.subcategories
+                                    ) {
                                       let totalYearly = 0;
                                       category.subcategories.forEach((sub) => {
-                                        const subYearlyInput = document.querySelector(`.sub-yearly-${sub.code}`);
+                                        const subYearlyInput =
+                                          document.querySelector(
+                                            `.sub-yearly-${sub.code}`,
+                                          );
                                         if (subYearlyInput) {
-                                          totalYearly += parseFloat(subYearlyInput.value) || 0;
+                                          totalYearly +=
+                                            parseFloat(subYearlyInput.value) ||
+                                            0;
                                         }
                                       });
-                                      parentYearlyInput.value = totalYearly.toFixed(2);
+                                      parentYearlyInput.value =
+                                        totalYearly.toFixed(2);
 
                                       // Also update parent monthly
-                                      const parentMonthlyInput = document.querySelector(`#parent-monthly-${category.code}`);
+                                      const parentMonthlyInput =
+                                        document.querySelector(
+                                          `#parent-monthly-${category.code}`,
+                                        );
                                       if (parentMonthlyInput) {
-                                        parentMonthlyInput.value = (totalYearly / 12).toFixed(2);
+                                        parentMonthlyInput.value = (
+                                          totalYearly / 12
+                                        ).toFixed(2);
                                       }
                                     }
                                     updateTotal();
-                                    setPersonalInflationRate(calculatePersonalInflationRate());
+                                    setPersonalInflationRate(
+                                      calculatePersonalInflationRate(),
+                                    );
                                   }}
                                 />
                               </div>
@@ -957,7 +1216,9 @@ const Page = ({ language }) => {
                   ))}
 
                   {/* Total Row */}
-                  <tr className={`${darkMode ? 'bg-gray-700' : 'bg-[#01389c]'} text-white font-bold`}>
+                  <tr
+                    className={`${darkMode ? "bg-gray-700" : "bg-[#01389c]"} text-white font-bold`}
+                  >
                     <td className="px-2 py-2" style={{ color: "white" }}>
                       {language === "GE" ? "სულ" : "Total"}
                     </td>
@@ -976,7 +1237,10 @@ const Page = ({ language }) => {
                           value={totalMonthlySum.toFixed(1)}
                           readOnly
                           className="border border-gray-400 rounded px-2 py-1 w-27 text-right total-monthly"
-                          style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
+                          style={{
+                            color: darkMode ? "#fff" : "#333",
+                            backgroundColor: darkMode ? "#374151" : "#fff",
+                          }}
                           id="total-monthly"
                         />
                         <input
@@ -984,7 +1248,10 @@ const Page = ({ language }) => {
                           value={totalYearlySum.toFixed(1)}
                           readOnly
                           className="border border-gray-400 rounded px-2 py-1 w-27 text-right total-yearly"
-                          style={{ color: darkMode ? "#fff" : "#333", backgroundColor: darkMode ? "#374151" : "#fff" }}
+                          style={{
+                            color: darkMode ? "#fff" : "#333",
+                            backgroundColor: darkMode ? "#374151" : "#fff",
+                          }}
                           id="total-yearly"
                         />
                       </div>
@@ -1014,7 +1281,9 @@ const Page = ({ language }) => {
         {/* Right Side: Charts */}
         <div className="w-full lg:w-1/3 flex flex-col gap-6">
           {/* Column Chart */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} border rounded p-2`}>
+          <div
+            className={`${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} border rounded p-2`}
+          >
             <HighchartsReact
               highcharts={Highcharts}
               options={{
@@ -1038,7 +1307,7 @@ const Page = ({ language }) => {
                 },
                 xAxis: {
                   categories: categories.map((cat) =>
-                    language === "GE" ? cat.name_geo : cat.name_en
+                    language === "GE" ? cat.name_geo : cat.name_en,
                   ),
                   labels: {
                     style: {
@@ -1085,7 +1354,22 @@ const Page = ({ language }) => {
                 series: [
                   {
                     name: language === "GE" ? "პერსონალური" : "Personal",
-                    data: [],
+                    data: categories.map((cat) => {
+                      const parentMonthlyInput = document.querySelector(
+                        `#parent-monthly-${cat.code}`,
+                      );
+                      const parentMonthlyValue =
+                        parseFloat(parentMonthlyInput?.value) || 0;
+                      const totalMonthlyInput =
+                        document.querySelector("#total-monthly");
+                      const totalMonthly =
+                        parseFloat(totalMonthlyInput?.value) || 0;
+
+                      if (totalMonthly === 0) return 0;
+                      return parseFloat(
+                        ((parentMonthlyValue / totalMonthly) * 100).toFixed(1),
+                      );
+                    }),
                     color: "#a6d5ff",
                     tooltip: {
                       valueSuffix: "%",
@@ -1094,8 +1378,8 @@ const Page = ({ language }) => {
                   {
                     name: language === "GE" ? "ოფიციალური" : "Official",
                     data: [
-                      34.5, 6.4, 4.7, 9.8, 4.3, 4.0, 8.9, 3.1, 6.5, 1.8, 9.5,
-                      3.2,
+                      34.5, 6.4, 4.7, 9.8, 5.3, 8.1, 10.9, 3.2, 3.8, 5.4, 3.1,
+                      4.7,
                     ],
                     color: "#eb695c",
                     tooltip: {
@@ -1111,7 +1395,9 @@ const Page = ({ language }) => {
           </div>
 
           {/* Line Chart */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'} border rounded p-2`}>
+          <div
+            className={`${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-300"} border rounded p-2`}
+          >
             <HighchartsReact
               highcharts={Highcharts}
               options={{
@@ -1135,13 +1421,7 @@ const Page = ({ language }) => {
                   useHTML: true,
                 },
                 xAxis: {
-                  categories: [
-                    "2024/01",
-                    "2024/06",
-                    "2024/11",
-                    "2025/05",
-                    "2025/11",
-                  ],
+                  categories: monthlyChartData.categories,
                   labels: {
                     style: {
                       fontFamily: "bpg_mrgvlovani_caps",
@@ -1186,7 +1466,7 @@ const Page = ({ language }) => {
                 series: [
                   {
                     name: language === "GE" ? "პერსონალური" : "Personal",
-                    data: [3.5, 4.2, 4.8, 5.1, 4.8],
+                    data: monthlyChartData.personalData,
                     color: "#a6d5ff",
                     tooltip: {
                       valueSuffix: "%",
@@ -1194,7 +1474,7 @@ const Page = ({ language }) => {
                   },
                   {
                     name: language === "GE" ? "ოფიციალური" : "Official",
-                    data: [4.0, 4.5, 5.0, 5.3, 5.0],
+                    data: monthlyChartData.officialData,
                     color: "#eb695c",
                     tooltip: {
                       valueSuffix: "%",
@@ -1210,7 +1490,6 @@ const Page = ({ language }) => {
         </div>
       </div>
     </div>
-
   );
 };
 
