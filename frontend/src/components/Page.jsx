@@ -915,7 +915,7 @@ const Page = ({ language }) => {
                           </span>
                         </td>
                         <td
-                          className="px-2 py-2 text-right"
+                          className="px-2 py-2 text-left pl-10"
                           style={{ color: darkMode ? "#fff" : "#333" }}
                         >
                           {groupData[`Group${category.code}`] !== undefined
@@ -923,7 +923,7 @@ const Page = ({ language }) => {
                             : "0%"}
                         </td>
                         <td
-                          className="px-2 py-2 text-right"
+                          className="px-2 py-2 text-left pl-10"
                           style={{ color: darkMode ? "#fff" : "#333" }}
                           id={`parent-avg-${category.code}`}
                         >
