@@ -11,6 +11,7 @@ const generatePDF = ({
   groupData,
   groupPrices,
   totalMonthlySum,
+  filename = "personal_inflation.pdf",
 }) => {
   try {
     console.log("PDF generation started...");
@@ -220,11 +221,24 @@ const generatePDF = ({
           heightLeft -= pageHeight;
         }
 
-        // Open PDF in new tab
+        // Open PDF in new tab or download
         const pdfBlob = pdf.output("blob");
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        console.log("PDF created successfully, opening in new tab...");
-        window.open(pdfUrl, "_blank");
+
+        if (filename) {
+          // Download with custom filename
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = filename.endsWith(".pdf") ? filename : `${filename}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          console.log(`PDF downloaded as: ${link.download}`);
+        } else {
+          // Open in new tab
+          console.log("PDF created successfully, opening in new tab...");
+          window.open(pdfUrl, "_blank");
+        }
       })
       .catch((error) => {
         console.error("Error rendering PDF:", error);
