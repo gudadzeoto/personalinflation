@@ -1224,7 +1224,7 @@ const Page = ({ language }) => {
                     </td>
                     <td className="px-2 py-2"></td>
                     <td
-                      className="px-2 py-2 text-right"
+                      className="px-2 py-2 text-left pl-10"
                       id="total-avg"
                       style={{ color: "white" }}
                     >
