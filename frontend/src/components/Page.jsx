@@ -931,7 +931,7 @@ const Page = ({ language }) => {
                             ? `${parseFloat(groupPrices[`Group${category.code}`]).toFixed(2)} ₾`
                             : "0 ₾"}
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-2 py-2 ">
                           <div className="flex gap-2">
                             <input
                               type="number"
@@ -1066,7 +1066,7 @@ const Page = ({ language }) => {
                               </span>
                             </td>
                             <td
-                              className="px-2 py-2 text-right"
+                              className="px-2 py-2 text-left pl-10"
                               style={{ color: darkMode ? "#fff" : "#333" }}
                             >
                               {subGroupData[
@@ -1076,7 +1076,7 @@ const Page = ({ language }) => {
                                 : "0%"}
                             </td>
                             <td
-                              className="px-2 py-2 text-right"
+                              className="px-2 py-2 text-left pl-10"
                               style={{ color: darkMode ? "#fff" : "#333" }}
                             >
                               {subCategoryPrices[
