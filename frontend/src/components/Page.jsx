@@ -8,6 +8,7 @@ import PdfIcon from "../assets/images/pdf.png";
 import InfoModal from "./InfoModal";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import generatePDF from "../utils/generatePDF";
 
 const InfoTooltip = ({ text, align = "center" }) => {
   const alignClass =
@@ -1264,7 +1265,21 @@ const Page = ({ language }) => {
           <div className="w-full flex items-center justify-between px-1 py-1">
             <a
               href="#"
-              className="flex items-center gap-2 text-[#01389c] hover:opacity-80 transition"
+              onClick={(e) => {
+                e.preventDefault();
+                generatePDF({
+                  language,
+                  startDate,
+                  endDate,
+                  officialInflationRate,
+                  personalInflationRate,
+                  categories,
+                  groupData,
+                  groupPrices,
+                  totalMonthlySum,
+                });
+              }}
+              className="flex items-center gap-2 text-[#01389c] hover:opacity-80 active:scale-90 active:opacity-60 transition-all cursor-pointer duration-100"
             >
               <img src={PdfIcon} alt="PDF" className="w-8 h-8" />
             </a>
