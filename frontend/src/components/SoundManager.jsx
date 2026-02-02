@@ -88,7 +88,7 @@ const SoundManager = ({
           playText(
             language === "GE"
               ? "პერსონალური ინფლაციის კალკულატორი"
-              : "Consumer Price Index Calculator"
+              : "Personal Inflation Calculator"
           );
           break;
         default:
