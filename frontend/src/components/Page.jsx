@@ -566,6 +566,7 @@ const Page = ({ language }) => {
         <div className="flex flex-col">
           {/* --- Title --- */}
           <h2
+            id="timeperiod"
             className="text-center"
             style={{
               fontWeight: 700,
@@ -583,6 +584,7 @@ const Page = ({ language }) => {
             {/* Start Date */}
             <div className="flex flex-col">
               <label
+                id="start"
                 className="mb-1 text-center"
                 style={{ color: darkMode ? "#fff !important" : "#333" }}
               >
@@ -618,6 +620,7 @@ const Page = ({ language }) => {
             {/* End Date */}
             <div className="flex flex-col">
               <label
+                id="end"
                 className="mb-1 text-center"
                 style={{ color: darkMode ? "#fff !important" : "#333" }}
               >
@@ -653,6 +656,7 @@ const Page = ({ language }) => {
 
           {/* --- Results Title --- */}
           <h3
+            id="Result"
             className="text-xl font-bold text-center py-2 mt-[-2rem]"
             style={{ color: darkMode ? "#fff !important" : "#333" }}
           >
@@ -665,6 +669,7 @@ const Page = ({ language }) => {
             {/* Row 1 */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full">
               <span
+              id="Resultone"
                 className="flex-1"
                 style={{ color: darkMode ? "#fff !important" : "#333" }}
               >
@@ -691,6 +696,7 @@ const Page = ({ language }) => {
             {/* Row 2 */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full">
               <span
+              id="Resulttwo"
                 className="flex-1 font-bold"
                 style={{ color: darkMode ? "#fff !important" : "#333" }}
               >
@@ -772,7 +778,7 @@ const Page = ({ language }) => {
               <tr>
                 <th className="px-1 py-1 text-left text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1">
-                    <span>
+                    <span id="groupname">
                       {language === "GE" ? "ჯგუფის დასახელება" : "Group Name"}
                     </span>
                     <InfoTooltip
@@ -815,7 +821,7 @@ const Page = ({ language }) => {
                 </th>
                 <th className="px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
-                    <span>
+                    <span id="pricechange">
                       {language === "GE"
                         ? "ფასების პროცენტული ცვლილება"
                         : "Percentage Change of Prices"}
@@ -831,7 +837,7 @@ const Page = ({ language }) => {
                 </th>
                 <th className="px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
-                    <span>
+                    <span id="avgmonthlyexpenditure">
                       {language === "GE"
                         ? "შინამეურნეობის საშუალო ხარჯი თვეში"
                         : "Average Monthly Expenditure of Household"}
@@ -847,9 +853,9 @@ const Page = ({ language }) => {
                 </th>
                 <th className="px-1 py-1 text-center text-[10px] font-bold text-white">
                   <div className="flex items-center gap-1 justify-center">
-                    <span>
+                    <span id="personalexpenditure">
                       {language === "GE"
-                        ? "პერსონალური ხარჯი (ლარი) "
+                        ? "პერსონალური ხარჯი (ლარი)"
                         : "Personal Expenditure (GEL)"}
                     </span>
                     <InfoTooltip
@@ -862,8 +868,8 @@ const Page = ({ language }) => {
                     />
                   </div>
                   <div className="flex justify-around mt-0.5 text-[9px] font-normal text-white">
-                    <span>{language === "GE" ? "ყოველთვიური" : "Monthly"}</span>
-                    <span>{language === "GE" ? "ყოველწლიური" : "Annual"}</span>
+                    <span id="month">{language === "GE" ? "ყოველთვიური" : "Monthly"}</span>
+                    <span id="year">{language === "GE" ? "ყოველწლიური" : "Annual"}</span>
                   </div>
                 </th>
               </tr>
@@ -884,7 +890,8 @@ const Page = ({ language }) => {
                       {/* Parent Category Row */}
                       <tr
                         className={`${darkMode ? "hover:bg-gray-700 bg-gray-800" : "hover:bg-gray-50 bg-white"} cursor-pointer`}
-                        onClick={() => {
+                        onClick={(e) => {
+                          if (e.target.tagName === 'INPUT') return;
                           setExpandedCategory(
                             expandedCategory === category.code
                               ? null
@@ -942,7 +949,6 @@ const Page = ({ language }) => {
                                 color: darkMode ? "#fff" : "#333",
                                 backgroundColor: darkMode ? "#514137" : "#fff",
                               }}
-                              onClick={(e) => e.stopPropagation()}
                               id={`parent-monthly-${category.code}`}
                               onChange={(e) => {
                                 const monthly = parseFloat(e.target.value) || 0;
@@ -995,7 +1001,6 @@ const Page = ({ language }) => {
                                 color: darkMode ? "#fff" : "#333",
                                 backgroundColor: darkMode ? "#374151" : "#fff",
                               }}
-                              onClick={(e) => e.stopPropagation()}
                               id={`parent-yearly-${category.code}`}
                               onChange={(e) => {
                                 const yearly = parseFloat(e.target.value) || 0;
@@ -1284,6 +1289,7 @@ const Page = ({ language }) => {
               <img src={PdfIcon} alt="PDF" className="w-8 h-8" />
             </a>
             <button
+            id="clear"
               onClick={handleClear}
               className="bg-white border border-[#01389c] text-[#01389c] px-6 py-2 rounded hover:bg-gray-50 transition text-sm font-medium flex items-center gap-2 cursor-pointer"
             >

@@ -5,6 +5,7 @@ const infogroupsRoute = require("./routes/infogroups");
 const subgroupindexRoute = require("./routes/subgroupindex");
 const grouppricesRoute = require("./routes/groupprices");
 const subgroupweightsRoute = require("./routes/subgroupweights");
+const ttsRoute = require("./routes/tts"); // <-- new
 
 
 
@@ -19,6 +20,7 @@ app.use("/api/infogroups", infogroupsRoute);
 app.use("/api/subgroupindex", subgroupindexRoute);
 app.use("/api/groupprices", grouppricesRoute);
 app.use("/api/subgroupweights", subgroupweightsRoute);
+app.use("/api/tts", ttsRoute); // <-- new
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
