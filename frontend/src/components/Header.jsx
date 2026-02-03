@@ -78,7 +78,7 @@ const Header = ({
 
     if (message) {
       const langParam = language === "GE" ? "ka" : "en";
-      const url = `http://localhost:5000/api/tts?text=${encodeURIComponent(
+      const url = `https://personalinflation-back.geostat.ge/api/tts?text=${encodeURIComponent(
         message
       )}&lang=${langParam}`;
 

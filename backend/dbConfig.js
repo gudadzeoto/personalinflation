@@ -1,13 +1,14 @@
+require("dotenv").config();
 const sql = require("mssql");
 
 const config = {
-  user: "sa",
-  password: "Ozzy112358",
-  server: "192.168.1.29", // or your SQL Server host
-  database: "calculator",
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,
+  database: process.env.DB_NAME,
   options: {
-    encrypt: false, // set to true if you're using Azure
-    trustServerCertificate: true,
+    encrypt: process.env.DB_ENCRYPT === "true",
+    trustServerCertificate: process.env.DB_TRUST_CERTIFICATE === "true",
   },
 };
 

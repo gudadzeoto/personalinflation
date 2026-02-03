@@ -32,8 +32,8 @@ const InfoTooltip = ({ text, align = "center" }) => {
 };
 
 const Page = ({ language }) => {
-  const [startDate, setStartDate] = useState(new Date(2024, 11)); // დეკემბერი 2024
-  const [endDate, setEndDate] = useState(new Date(2025, 11)); // დეკემბერი 2025
+  const [startDate, setStartDate] = useState(new Date(2025, 11)); // დეკემბერი 2024
+  const [endDate, setEndDate] = useState(new Date(2026, 11)); // დეკემბერი 2025
   const startDateRef = useRef(null);
   const endDateRef = useRef(null);
   const [dateError, setDateError] = useState("");
@@ -61,7 +61,7 @@ const Page = ({ language }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/personaltitle");
+        const response = await fetch("https://personalinflation-back.geostat.ge/api/personaltitle");
         const data = await response.json();
 
         // Group categories by level
@@ -162,7 +162,7 @@ const Page = ({ language }) => {
         try {
           // Fetch official and group inflation for this month (year-over-year)
           const response = await fetch(
-            `http://localhost:5000/api/infogroups?from=${lastYearLabel}&to=${monthLabel}`,
+            `https://personalinflation-back.geostat.ge/api/infogroups?from=${lastYearLabel}&to=${monthLabel}`,
           );
           const data = await response.json();
 
@@ -304,7 +304,7 @@ const Page = ({ language }) => {
   const fetchInfoGroups = async (fromDate, toDate) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/infogroups?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
+        `https://personalinflation-back.geostat.ge/api/infogroups?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
       );
       const data = await response.json();
 
@@ -347,7 +347,7 @@ const Page = ({ language }) => {
   const fetchSubGroupIndex = async (fromDate, toDate) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/subgroupindex?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
+        `https://personalinflation-back.geostat.ge/api/subgroupindex?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
       );
       const data = await response.json();
 
@@ -381,7 +381,7 @@ const Page = ({ language }) => {
   const fetchGroupPrices = async (year) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/groupprices?year=${year}`,
+        `https://personalinflation-back.geostat.ge/api/groupprices?year=${year}`,
       );
       const data = await response.json();
 
@@ -407,7 +407,7 @@ const Page = ({ language }) => {
   const fetchSubGroupWeights = async (year) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/subgroupweights?year=${year}`,
+        `https://personalinflation-back.geostat.ge/api/subgroupweights?year=${year}`,
       );
       const data = await response.json();
 
