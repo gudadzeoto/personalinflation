@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../styles/datepicker-custom.css";
+import { API_BASE_URL } from "../config";
 import Kalata from "../assets/images/Kalata.jpg";
 import Basket from "../assets/images/Basket.jpg";
 import PdfIcon from "../assets/images/pdf.png";
@@ -32,8 +33,8 @@ const InfoTooltip = ({ text, align = "center" }) => {
 };
 
 const Page = ({ language }) => {
-  const [startDate, setStartDate] = useState(new Date(2025, 11)); // დეკემბერი 2024
-  const [endDate, setEndDate] = useState(new Date(2026, 11)); // დეკემბერი 2025
+  const [startDate, setStartDate] = useState(new Date(2025, 0)); // დეკემბერი 2024
+  const [endDate, setEndDate] = useState(new Date(2026, 0)); // დეკემბერი 2025
   const startDateRef = useRef(null);
   const endDateRef = useRef(null);
   const [dateError, setDateError] = useState("");
@@ -61,7 +62,7 @@ const Page = ({ language }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("https://personalinflation-back.geostat.ge/api/personaltitle");
+        const response = await fetch(`${API_BASE_URL}/api/personaltitle`);
         const data = await response.json();
 
         // Group categories by level
@@ -162,7 +163,7 @@ const Page = ({ language }) => {
         try {
           // Fetch official and group inflation for this month (year-over-year)
           const response = await fetch(
-            `https://personalinflation-back.geostat.ge/api/infogroups?from=${lastYearLabel}&to=${monthLabel}`,
+            `${API_BASE_URL}/api/infogroups?from=${lastYearLabel}&to=${monthLabel}`,
           );
           const data = await response.json();
 
@@ -304,7 +305,7 @@ const Page = ({ language }) => {
   const fetchInfoGroups = async (fromDate, toDate) => {
     try {
       const response = await fetch(
-        `https://personalinflation-back.geostat.ge/api/infogroups?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
+        `${API_BASE_URL}/api/infogroups?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
       );
       const data = await response.json();
 
@@ -347,7 +348,7 @@ const Page = ({ language }) => {
   const fetchSubGroupIndex = async (fromDate, toDate) => {
     try {
       const response = await fetch(
-        `https://personalinflation-back.geostat.ge/api/subgroupindex?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
+        `${API_BASE_URL}/api/subgroupindex?from=${formatDate(fromDate)}&to=${formatDate(toDate)}`,
       );
       const data = await response.json();
 
@@ -381,7 +382,7 @@ const Page = ({ language }) => {
   const fetchGroupPrices = async (year) => {
     try {
       const response = await fetch(
-        `https://personalinflation-back.geostat.ge/api/groupprices?year=${year}`,
+        `${API_BASE_URL}/api/groupprices?year=${year}`,
       );
       const data = await response.json();
 
@@ -407,7 +408,7 @@ const Page = ({ language }) => {
   const fetchSubGroupWeights = async (year) => {
     try {
       const response = await fetch(
-        `https://personalinflation-back.geostat.ge/api/subgroupweights?year=${year}`,
+        `${API_BASE_URL}/api/subgroupweights?year=${year}`,
       );
       const data = await response.json();
 

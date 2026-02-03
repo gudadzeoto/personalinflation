@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 import sakstatLogoGe from "../assets/images/sakstat-logo.svg";
 import sakstatLogoEn from "../assets/images/sakstat-logo-en.png";
 import georgianFlag from "../assets/images/georgian-flag.svg";
@@ -78,7 +79,7 @@ const Header = ({
 
     if (message) {
       const langParam = language === "GE" ? "ka" : "en";
-      const url = `https://personalinflation-back.geostat.ge/api/tts?text=${encodeURIComponent(
+      const url = `${API_BASE_URL}/api/tts?text=${encodeURIComponent(
         message
       )}&lang=${langParam}`;
 

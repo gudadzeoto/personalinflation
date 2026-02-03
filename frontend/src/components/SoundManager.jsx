@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from "react";
+import { API_BASE_URL } from "../config";
 
 const SoundManager = ({
   soundEnabled,
@@ -19,7 +20,7 @@ const SoundManager = ({
       if (!soundEnabled || !text) return;
       try {
         const langParam = language === "GE" ? "ka" : "en";
-        const url = `https://personalinflation-back.geostat.ge/api/tts?text=${encodeURIComponent(
+        const url = `${API_BASE_URL}/api/tts?text=${encodeURIComponent(
           text
         )}&lang=${langParam}`;
 

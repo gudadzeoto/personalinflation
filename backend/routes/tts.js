@@ -10,9 +10,10 @@ router.get("/", async (req, res) => {
 
     if (!response.ok) return res.status(500).send("Failed to fetch TTS");
 
-    const buffer = await response.arrayBuffer();
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(new Uint8Array(arrayBuffer));
     res.setHeader("Content-Type", "audio/mpeg");
-    res.send(Buffer.from(buffer));
+    res.send(buffer);
   } catch (err) {
     console.error(err);
     res.status(500).send("TTS proxy error");
